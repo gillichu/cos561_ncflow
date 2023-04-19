@@ -3,21 +3,39 @@ from create_subproblems import *
 from itertools import combinations
 from collections import defaultdict
 
+# Convert path to simple path by removing edges between duplicate nodes
 def to_simple_path(path):
-    # todo
     while (len(set(path)) != len(path)):
-        dup = [x for x in path if path.count(x) > 1][0]        
+        dup = [x for x in path if path.count(x) > 1][0]  
+        indices = [i for i,d in enumerate(path) if d==dup]    
+        del path[indices[0]:indices[-1]]
     return path
 
-def compute_path_cap(path):
-    # todo
-    return path
+# Return the list of edges (u,v) in a path
+def path_to_edgelist(path):
+    edgelist = []
+    for u, v in zip(path, path[1:]):
+        edgelist.append((u, v))
+    return edgelist
+
+# Check if input path is a valid path, return the sum of edge capacity and min edge cap
+def compute_path_cap(G, path):
+    if nx.is_path(G, path) == False:
+        print("not a path!")
+        return 0
+    cap_list = nx.get_edge_attributes(G,'capacity')
+    cap = 0
+    min = 999999
+    for i in path_to_edgelist(path):
+        cap += cap_list[i]
+        if cap_list[i] < min: min = cap_list[i]
+    return cap, min
 
 # k shortest edge-disjoint simple paths between u and v
 def path_simple(G, u, v, k = None):
     disj_paths = list(nx.edge_disjoint_paths(G, u, v))
     # Need to make sure paths are simple
-    # disj_paths = [to_simple_path(path) for path in disj_paths]
+    disj_paths = [to_simple_path(path) for path in disj_paths]
     disj_paths = sorted(disj_paths, key = lambda path: len(path))
 
     if k == None or len(disj_paths) < k:
@@ -31,7 +49,6 @@ def path_meta_pair(G, agg_edge_dict, agg_to_orig_nodes, u_cluster, v_cluster, k 
     paths = [list(e) for e in agg_edge_dict[(u_cluster, v_cluster)]]
 
     # Create G' by contracting nodes in u_cluster into a single node, and same with v_cluster
-    # vis_graph(G)
     newG = G
     u_nodes = agg_to_orig_nodes[u_cluster]
     for i in range(1,len(u_nodes)):
@@ -114,3 +131,4 @@ if __name__ == '__main__':
 
     paths = path_meta(G, num_clusters,agg_edge_dict, agg_to_orig_nodes)
     print(paths)
+    # print(compute_path_cap(G,[0,1]))
