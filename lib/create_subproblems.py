@@ -206,21 +206,22 @@ def generate_uniform_tm(G, max_demand=10, seed=0):
     
     return tm
 
-G = toy_network_1()
-tm = generate_uniform_tm(G)
-vis_graph(G)
+if __name__ == '__main__':
+    G = toy_network_1()
+    tm = generate_uniform_tm(G)
+    vis_graph(G)
 
-num_clusters = int(np.sqrt(len(G.nodes)))
-G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
+    num_clusters = int(np.sqrt(len(G.nodes)))
+    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
 
-vis_graph(G_agg)
-print('agg_edge_dict ', agg_edge_dict, '\n')
-print('agg_to_orig_nodes ', agg_to_orig_nodes, '\n') 
-print('orig_to_agg_node ', orig_to_agg_node, '\n') 
-print('agg_commodities_dict ', agg_commodities_dict, '\n') 
+    vis_graph(G_agg)
+    print('agg_edge_dict ', agg_edge_dict, '\n')
+    print('agg_to_orig_nodes ', agg_to_orig_nodes, '\n') 
+    print('orig_to_agg_node ', orig_to_agg_node, '\n') 
+    print('agg_commodities_dict ', agg_commodities_dict, '\n') 
 
-for cluster_id, cluster in G_clusters_dict.items():
-    print('cluster_id ', cluster_id)
-    vis_graph(cluster)
-    print('agg_to_orig_nodes ', agg_to_orig_nodes[cluster_id], '\n') 
-    print('clusters_commodities_dict ', clusters_commodities_dict[cluster_id], '\n') 
+    for cluster_id, cluster in G_clusters_dict.items():
+        print('cluster_id ', cluster_id)
+        vis_graph(cluster)
+        print('agg_to_orig_nodes ', agg_to_orig_nodes[cluster_id], '\n') 
+        print('clusters_commodities_dict ', clusters_commodities_dict[cluster_id], '\n') 
