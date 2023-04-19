@@ -9,7 +9,7 @@ def to_simple_path(path):
         dup = [x for x in path if path.count(x) > 1][0]        
     return path
 
-def compute_cap(path):
+def compute_path_cap(path):
     # todo
     return path
 
@@ -65,12 +65,46 @@ def path_meta(G, num_clusters, agg_edge_dict, agg_to_orig_nodes, k = None):
     return paths
 
 
+
+def toy_network_2():
+    G = nx.DiGraph()
+    G.add_node(0, label='A0', pos=(-3, 1))
+    G.add_node(1, label='A1', pos=(-2, 0))
+    G.add_node(2, label='A2', pos=(-3, -1))
+    G.add_node(3, label='B0', pos=(-1, 1))
+    G.add_node(4, label='B1', pos=(1, 0))
+    G.add_node(5, label='B2', pos=(-1, -1))
+    G.add_node(6, label='C0', pos=(2, 1))
+    G.add_node(7, label='C1', pos=(3, 0))
+    G.add_node(8, label='C2', pos=(2, -1))
+
+    cap1, cap2 = 1, 2
+    add_bi_edge(G, 0, 1, capacity=cap1)
+    add_bi_edge(G, 0, 2, capacity=cap1)
+    add_bi_edge(G, 1, 2, capacity=cap1)
+    
+    add_bi_edge(G, 3, 4, capacity=cap1)
+    add_bi_edge(G, 3, 5, capacity=cap1)
+    add_bi_edge(G, 4, 5, capacity=cap1)
+
+    add_bi_edge(G, 6, 7, capacity=cap1)
+    add_bi_edge(G, 6, 8, capacity=cap1)
+    add_bi_edge(G, 7, 8, capacity=cap1)
+
+    add_bi_edge(G, 0, 3, capacity=cap1)                                                                     
+    add_bi_edge(G, 2, 5, capacity=cap1)
+    add_bi_edge(G, 4, 7, capacity=cap1) 
+
+    return G
+
+
 if __name__ == '__main__':
-    G = toy_network_1()
+    G = toy_network_2()
     tm = generate_uniform_tm(G)
     vis_graph(G)
 
     num_clusters = int(np.sqrt(len(G.nodes)))
+    print(num_clusters)
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
 
     print('agg_edge_dict ', agg_edge_dict, '\n')
