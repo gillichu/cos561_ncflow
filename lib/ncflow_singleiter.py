@@ -15,15 +15,17 @@ def solve_lp():
     pass 
 
 
-def r1_lp(G_meta, paths_dict, agg_commodities_dict):
+def r1_lp(paths_dict, agg_commodities_dict):
+    ### expects input:
+    ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap), ...]
+    
     r1_outfile = 'r1_out.txt'
     commodities = []
-    edge_to_paths = defaultdict(list)
     r1_path_to_commodities = dict()
     r1_commodity_to_pathids = defaultdict(list)
     
     path_idx = 0
-
+    path_to_pathidx = dict()
 
     for key in agg_commodities_dict.keys():
         commodity_k, pathinfo = key
@@ -32,12 +34,11 @@ def r1_lp(G_meta, paths_dict, agg_commodities_dict):
         # get single path between each pair of meta nodes
         paths = paths_dict[(s_k, t_k)]
         assert len(paths) == 1
+        
         path = paths[0]
-        path_ids = []
+        path_to_pathidx[path] = path_idx
 
-        # get all the edges in the path
-        for edge in path_to_edge_list(path):
-            edge_to_paths[edge].append(path_idx)
+        path_ids = []
         path_ids.append(path_idx)
 
         # get the path to commodity (for r3)
@@ -62,19 +63,17 @@ def r1_lp(G_meta, paths_dict, agg_commodities_dict):
         m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
 
     # add edge capacity constraints 
-    for u, v, c_e in G_meta.edges.data('capacity'):
-        # print("G_meta", G_meta.edges.data)
-        if (u, v) in edge_to_paths: 
-            paths = edge_to_paths[(u, v)]
-            constr_vars = [path_variables[p] for p in paths]
-            m.addConstr(quicksum(constr_vars) <= c_e)
+    for u, v in paths_dict:
+        path, c_e = paths_dict[(u, v)]
+        constr_vars = [path_variables[path_to_pathidx[p]] for p in paths]
+        m.addConstr(quicksum(constr_vars) <= c_e)
 
     return LpSolver(m, None, r1_outfile), r1_path_to_commodities
 
-def get_solver_results(model, G, path_id_2_commod_id, all_paths):
+def get_solver_results(model, G, path_id_to_commod_id, all_paths):
     num_edges = len(G.edges)
-    num_paths = len(set(path_id_2_commod_id.values()))
-    # set up edge to edge idx
+    num_paths = len(set(path_id_to_commod_id.values()))
+    # set up edge to edge idx, these are original edges in the aggregated graph
     edge_dict = dict()
     for edge_idx, edge in enumerate(G.edges):
         edge_dict[edge] = edge_idx
@@ -84,7 +83,7 @@ def get_solver_results(model, G, path_id_2_commod_id, all_paths):
     for var in model.getVars():
         # match var name back to path
         p = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
-        commodity_idx = path_id_2_commod_id[p]
+        commodity_idx = path_id_to_commod_id[p]
         for edge in path_to_edge_list(all_paths[p]):
             sol_mat[edge_dict[edge], commodity_idx] += var.x
     return sol_mat
@@ -105,11 +104,11 @@ if __name__ == '__main__':
 
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
 
+    # original edges on the collapsed graph, outputs dict (metanode, metanode) = set of paths
     paths_dict = path_meta(G, num_clusters, agg_edge_dict, agg_to_orig_nodes)
 
     # select paths for r1, this iteration
-    r1_paths = dict()
-    all_r1_paths = []
+    ### Clover is creating functions for this
     
     # create r1_agg_commodities_dict
     for key in agg_commodities_dict.keys():
@@ -119,13 +118,6 @@ if __name__ == '__main__':
         r1_paths[(s_k, t_k)] = [paths[0]]
         all_r1_paths.append(paths[0])
     
-    # add edges back into G_meta. I'm currently doing this incorrectly. I think this is also the reason get_solver_results is confused. 
-    for a, b in combinations(G_agg.nodes, 2): 
-        if a != b:
-            add_bi_edge(G_agg, a, b, 2)
-
-    print("G_agg", G_agg)
-
     r1_solver, r1_path_to_commod = r1_lp(G_agg, r1_paths, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
