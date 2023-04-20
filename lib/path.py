@@ -54,7 +54,7 @@ def select_inter_edge(G, agg_edge_dict, iter_id):
         selected_inter_edge[(u_meta,v_meta)] = (edges[i],cap_list[edges[i]])
     return selected_inter_edge
     
-# Check if input path is a valid path, return the sum of edge capacity and min edge cap
+# Check if input path is a valid path, return the min edge cap, i.e. path bottleneck capacity
 def compute_agg_path_cap(G_agg,path, selected_inter_edge):
     if nx.is_path(G_agg, path) == False:
         print("not a path in compute_agg_path_cap!")
@@ -66,7 +66,7 @@ def compute_agg_path_cap(G_agg,path, selected_inter_edge):
         if cap < min: min = cap
     return min
 
-# Find all paths from u_cluster to v_cluster
+# Find selected path from u_cluster to v_cluster in the iter_id-th iteration 
 def path_meta_pair(G, G_agg, u_cluster, v_cluster, agg_edge_dict, iter_id,  k = None):
     paths = path_simple(G_agg, u_cluster,v_cluster,k)
     if len(paths) < 1:
@@ -76,9 +76,9 @@ def path_meta_pair(G, G_agg, u_cluster, v_cluster, agg_edge_dict, iter_id,  k = 
     paths = sorted(paths, key = lambda path: compute_agg_path_cap(G_agg,path,selected_inter_edge), reverse=True)
     return (paths[0],compute_agg_path_cap(G_agg,paths[0],selected_inter_edge))
 
-# Find paths for every pair of clusters
+# Find selected path for every pair of clusters in the iter_id-th iteration
 # OUTPUT: paths[(u_cluster,v_cluster)] = 
-#           (list of cluster node ids representing the selected path, bottleneck cap of the selected path)
+#           (the selected path represented by a list of cluster node ids, bottleneck cap of the selected path)
 def path_meta(G, G_agg, num_clusters, agg_edge_dict, iter_id, k = None):
     meta_pairs = list(combinations(range(0,num_clusters), 2))
     paths = defaultdict(dict)
@@ -107,9 +107,9 @@ def toy_network_2():
     add_bi_edge(G, 0, 2, capacity=2)
     add_bi_edge(G, 1, 2, capacity=3)
     
-    add_bi_edge(G, 3, 4, capacity=1)
-    add_bi_edge(G, 3, 5, capacity=2)
-    add_bi_edge(G, 4, 5, capacity=3)
+    add_bi_edge(G, 3, 4, capacity=1)  # 4
+    add_bi_edge(G, 3, 5, capacity=2)  # 5
+    add_bi_edge(G, 4, 5, capacity=3)  # ...
 
     add_bi_edge(G, 6, 7, capacity=1)
     add_bi_edge(G, 6, 8, capacity=2)
@@ -117,7 +117,7 @@ def toy_network_2():
 
     add_bi_edge(G, 0, 3, capacity=1)                                                                     
     add_bi_edge(G, 2, 5, capacity=1)
-    add_bi_edge(G, 4, 7, capacity=1) 
+    add_bi_edge(G, 4, 7, capacity=1)  # 12
 
     return G
 
