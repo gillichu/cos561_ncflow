@@ -108,17 +108,10 @@ if __name__ == '__main__':
     paths_dict = path_meta(G, num_clusters, agg_edge_dict, agg_to_orig_nodes)
 
     # select paths for r1, this iteration
-    ### Clover is creating functions for this
+    iter_id = 0
+    selected_inter_edges = select_inter_edge(G, agg_edge_dict, iter_id)
     
-    # create r1_agg_commodities_dict
-    for key in agg_commodities_dict.keys():
-        commodity_k, pathinfo = key
-        s_k, t_k, d_k = pathinfo
-        paths = paths_dict[(s_k, t_k)]
-        r1_paths[(s_k, t_k)] = [paths[0]]
-        all_r1_paths.append(paths[0])
-    
-    r1_solver, r1_path_to_commod = r1_lp(G_agg, r1_paths, agg_commodities_dict)
+    r1_solver, r1_path_to_commod = r1_lp(selected_inter_edges, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
     #print(get_solver_results(r1_solver._model, G_agg, r1_path_to_commod, all_r1_paths))
