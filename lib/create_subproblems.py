@@ -11,7 +11,7 @@ CAPACITY = 'capacity'
 LABEL = 'label'
 POS = 'pos'
 
-def vis_graph(G, node_label='label', edge_label='capacity'):
+def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = []):
     '''
     Visualize the graph
     (NOTE: this is taken directly from their github)
@@ -38,6 +38,12 @@ def vis_graph(G, node_label='label', edge_label='capacity'):
     pos = get_node_attrs_or_default(G, 'pos', random_pos)
     colors = get_node_attrs_or_default(G, 'color', 'yellow')
     colors = [colors[node] for node in G.nodes]
+    # visualize G with nodes colored by partition
+    if orig_to_agg_node != []:
+        allcolors = ['yellow','red','blue','green','purple','pink','white']
+        for i in range(0,len(G.nodes)):
+            cluster_id = orig_to_agg_node[i]
+            colors[i] = allcolors[cluster_id % len(allcolors)]
     nx.draw(G, pos, node_size=1000, node_color=colors)
     node_labels = get_node_attrs_or_default(G, node_label, str)
     nx.draw_networkx_labels(G, pos, labels=node_labels)
@@ -141,6 +147,15 @@ def construct_subproblems(G, tm, num_clusters=3):
                 cluster.add_edge(node, neighbor_node, capacity=G[node][neighbor_node][CAPACITY])
             else:
                 agg_edge_dict[(node_cluster_id, neighbor_node_cluster_id)].append((node, neighbor_node))
+
+    # ***Sort the edges in agg_edge_dict[(u_meta,v_meta)] by decreasing capacity
+    # ***Also add edge (u_meta,v_meta) to G_agg if there is any edge between nodes in u_meta and v_meta in G
+    cap_list = nx.get_edge_attributes(G,'capacity')
+    for (u_meta,v_meta) in agg_edge_dict.keys():
+        edges = agg_edge_dict[(u_meta,v_meta)]
+        agg_edge_dict[(u_meta,v_meta)] = sorted(edges, key = lambda e: cap_list[e], reverse=True)
+        if len(edges) > 0:
+            G_agg.add_edge(u_meta, v_meta)
 
     # Construct inter and intra cluster commodity dicts
     commodity_list = generate_commodity_list(tm)
