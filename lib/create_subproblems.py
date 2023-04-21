@@ -10,7 +10,7 @@ CAPACITY = 'capacity'
 LABEL = 'label'
 POS = 'pos'
 
-def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = []):
+def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = [], title=None):
     '''
     Visualize the graph
     (NOTE: this is taken directly from their github)
@@ -50,6 +50,10 @@ def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = [
     edge_labels = nx.get_edge_attributes(G, edge_label)
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels,
             label_pos=0.8)
+    
+    if title:
+        plt.suptitle(title)
+
     plt.show()
 
 
@@ -214,21 +218,23 @@ def generate_uniform_tm(G, max_demand=10, seed=0):
     return tm
 
 if __name__ == '__main__':
+    
     G = toy_network_1()
     tm = generate_uniform_tm(G)
-    vis_graph(G)
+    vis_graph(G, title="original network")
 
     num_clusters = int(np.sqrt(len(G.nodes)))
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
 
-    vis_graph(G_agg)
+
+    vis_graph(G_agg, title="aggregated network (using metanodes)")
     print('agg_edge_dict ', agg_edge_dict, '\n')
     print('agg_to_orig_nodes ', agg_to_orig_nodes, '\n') 
     print('orig_to_agg_node ', orig_to_agg_node, '\n') 
     print('agg_commodities_dict ', agg_commodities_dict, '\n') 
 
-    for cluster_id, cluster in G_clusters_dict.items():
+    for cluster_id, cluster in sorted(G_clusters_dict.items(), key=lambda x: x[0]):
         print('cluster_id ', cluster_id)
-        vis_graph(cluster)
+        vis_graph(cluster, title=f"cluster {cluster_id}")
         print('agg_to_orig_nodes ', agg_to_orig_nodes[cluster_id], '\n') 
         print('clusters_commodities_dict ', clusters_commodities_dict[cluster_id], '\n') 
