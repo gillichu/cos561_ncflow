@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import permutations
 import pymetis
-# import metis
 from collections import defaultdict
 import pprint
 
@@ -88,14 +87,17 @@ def partition_network(G, num_clusters=3):
      - num_clusters: number of clusters
     OUTPUT: partitioned network vector (where node i maps to cluster partition_vector[i])  
     '''
+    num_nodes = len(G.nodes)
+    adj_matrix = np.asarray(nx.adjacency_matrix(G, weight=CAPACITY).todense(), dtype=np.int32)
+    adjncy = [np.argwhere(adj_matrix[node] != 0).flatten() for node in range(num_nodes)]
+    
+    xadj = np.cumsum([0] + [len(elem) for elem in adjncy]) #[:-1]
 
-    adj_matrix = np.asarray(nx.adjacency_matrix(G, weight=CAPACITY).todense(), dtype=np.float64)
-    _, partition_vector = pymetis.part_graph(num_clusters, adj_matrix, recursive=True)
-
-    # G.graph['edge_weight_attr']=CAPACITY
-    # _, partition_vector = pymetis.part_graph(num_clusters, G, recursive=True)
-    # G = metis.networkx_to_metis(G, edge_weight_attr=CAPACITY)
-    # _, partition_vector = metis.part_graph(G, num_clusters, recursive=True, rtype='fm') 
+    eweights = [[adj_matrix[node][neighbor] for neighbor in neighbors] for node, neighbors in enumerate(adjncy)]
+    eweights = np.array([elem for elems in eweights for elem in elems])
+    adjncy = np.array([elem for elems in adjncy for elem in elems])
+    
+    _, partition_vector = pymetis.part_graph(num_clusters, adjncy=adjncy, xadj=xadj, eweights=eweights, recursive=True, options=pymetis.Options(rtype=0))
     return np.array(partition_vector)
 
 
@@ -131,7 +133,6 @@ def construct_subproblems(G, tm, num_clusters=3):
             orig_to_agg_node[node] = cluster_id 
 
         agg_pos = np.mean([get_node_info(G, node, info_str=POS) for node in nodes_in_cluster], axis=0)
-        print(agg_pos, [get_node_info(G, node, info_str=POS) for node in nodes_in_cluster])
         G_agg.add_node(cluster_id, label=str(cluster_id), pos=agg_pos)
         
     # Populate G_clusters_dict and agg_edge_dict
@@ -188,16 +189,7 @@ def toy_network_1():
     G.add_node(4, label='4', pos=(1, 0))
     G.add_node(5, label='5', pos=(2, -2))
 
-    # cap, eps = 10, 1e-4
-    # add_bi_edge(G, 0, 3, capacity=eps)
-    # add_bi_edge(G, 0, 1, capacity=cap)                                                                     
-    # add_bi_edge(G, 1, 4, capacity=cap)
-    # add_bi_edge(G, 1, 2, capacity=cap)
-    # add_bi_edge(G, 2, 5, capacity=cap)
-    # add_bi_edge(G, 3, 4, capacity=cap)
-    # add_bi_edge(G, 4, 5, capacity=eps)
-
-    cap1, cap2 = 1, 2
+    cap1, cap2 = 10, 1
     add_bi_edge(G, 0, 3, capacity=cap1)
     add_bi_edge(G, 0, 1, capacity=cap2)                                                                     
     add_bi_edge(G, 1, 4, capacity=cap2)
