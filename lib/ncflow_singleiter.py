@@ -5,7 +5,7 @@ from path import *
 from create_subproblems import *
 from itertools import tee, combinations
 
-def path_to_edge_list(path):
+def nodelist_to_edge_list(path):
     a, b = tee(path)
     next(b, None)
     return zip(a, b)
@@ -15,37 +15,38 @@ def solve_lp():
     pass 
 
 
-def r1_lp(paths_dict, agg_commodities_dict):
+def r1_lp(G, paths_dict, agg_commodities_dict):
     ### expects input:
     ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
+    print("path dictionary", paths_dict)
 
     r1_outfile = 'r1_out.txt'
     commodities = []
     r1_path_to_commodities = dict()
     r1_commodity_to_pathids = defaultdict(list)
-    edge_to_paths = defaultdict(list)
+    edge_to_pathids = defaultdict(list)
+    cap_list = nx.get_edge_attributes(G, 'capacity')
+    print("cap list", cap_list)
     
     path_idx = 0
 
     for key in agg_commodities_dict.keys():
-        commodity_k, pathinfo = key
+        commodity_idx, pathinfo = key
         s_k, t_k, d_k = pathinfo
 
         # get single path between each pair of meta nodes
-        paths = paths_dict[(s_k, t_k)]
-        
-        path = paths[0]
-        for edge in path_to_edge_list(path):
-            edge_to_paths[edge].append(path_idx)
-
-        path_ids = []
-        path_ids.append(path_idx)
-
+        # should only have 1, since selected inter-cluster edges
+        path_nodelist = paths_dict[(s_k, t_k)][0] 
+        # original node edges
+        for edge in nodelist_to_edge_list(path_nodelist):
+            print("original edge", edge, "demand:", d_k, "capacity", cap_list[edge])
+            edge_to_pathids[edge].append(path_idx)
+            
         # get the path to commodity (for r3)
-        r1_path_to_commodities[path_idx] = commodity_k
-        r1_commodity_to_pathids[commodity_k].append(path_idx)
+        r1_path_to_commodities[path_idx] = commodity_idx
+        r1_commodity_to_pathids[commodity_idx].append(path_idx)
         
-        commodities.append((commodity_k, d_k, path_ids))
+        commodities.append((commodity_idx, d_k, [path_idx]))
         path_idx += 1
     
     m = Model('max-flow: R1')
@@ -59,14 +60,17 @@ def r1_lp(paths_dict, agg_commodities_dict):
 
     # add demand constraints
     for _, d_k, path_ids in commodities:
-        # all path ids should be <= commodity k's demand (d_k)
+        # sum of all path variables for commodity k (only one) should be <= commodity k's demand (d_k)
         m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
 
     # add edge capacity constraints 
-    for u, v in paths_dict: # for each intercluster edge in the selected paths dictionary
-        # paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
-        _, c_e = paths_dict[(u, v)]
-        path_indices = edge_to_paths[(u, v)] 
+    for edge in edge_to_pathids.keys():
+
+        # get all paths on this edge
+        path_indices = edge_to_pathids[edge]
+
+        # get edge capacity
+        c_e = cap_list[edge]
 
         # ensure that all paths on a given edge meet the edge constraint
         constr_vars = [path_variables[p] for p in path_indices]
@@ -88,7 +92,7 @@ def get_solver_results(model, G, path_id_to_commod_id, all_paths):
         # match var name back to path
         p = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
         commodity_idx = path_id_to_commod_id[p]
-        for edge in path_to_edge_list(all_paths[p]):
+        for edge in nodelist_to_edge_list(all_paths[p]):
             sol_mat[edge_dict[edge], commodity_idx] += var.x
     return sol_mat
 
@@ -116,7 +120,9 @@ if __name__ == '__main__':
     selected_inter_edges = select_inter_edge(G, agg_edge_dict, iter_id)
     print('selected_inter_edges', selected_inter_edges)
     
-    r1_solver, r1_path_to_commod = r1_lp(selected_inter_edges, agg_commodities_dict)
+
+    
+    r1_solver, r1_path_to_commod = r1_lp(G, selected_inter_edges, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
     #print(get_solver_results(r1_solver._model, G_agg, r1_path_to_commod, all_r1_paths))
