@@ -18,15 +18,18 @@ def solve_lp():
 def r1_lp(G, paths_dict, agg_commodities_dict):
     ### expects input:
     ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
+    ### paths_dict contains meta node pairs that may not be directly connected
     print("path dictionary", paths_dict)
 
     r1_outfile = 'r1_out.txt'
     commodities = []
     r1_path_to_commodities = dict()
     r1_commodity_to_pathids = defaultdict(list)
-    edge_to_pathids = defaultdict(list)
+    # holds meta edges that actually exist between clusters
+    meta_edge_to_pathids = defaultdict(list)
     cap_list = nx.get_edge_attributes(G, 'capacity')
     print("cap list", cap_list)
+    print("agg_commodities_dict.keys", agg_commodities_dict.keys())
     
     path_idx = 0
 
@@ -40,8 +43,8 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         path_nodelist = paths_dict[(s_k, t_k)][0] 
         # original node edges
         for edge in nodelist_to_edge_list(path_nodelist):
-            print("original edge", edge, "demand:", d_k, "capacity", cap_list[edge])
-            edge_to_pathids[edge].append(path_idx)
+            print("meta-edge", edge, "demand:", d_k, "capacity", cap_list[edge])
+            meta_edge_to_pathids[edge].append(path_idx)
             
         # get the path to commodity (for r3)
         r1_path_to_commodities[path_idx] = commodity_idx
@@ -51,6 +54,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         path_idx += 1
     
     m = Model('max-flow: R1')
+    print("commodities", commodities)
     
     # create a variable for each path
     path_variables = m.addVars(path_idx, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
@@ -62,19 +66,19 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
     # add demand constraints
     for _, d_k, path_ids in commodities:
         # sum of all path variables for commodity k (only one) should be <= commodity k's demand (d_k)
+        print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
         m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
 
-    # add edge capacity constraints 
-    for edge in edge_to_pathids.keys():
+    # add meta_edge capacity constraints 
+    for meta_edge in meta_edge_to_pathids.keys():
 
-        # get all paths on this edge
-        path_indices = edge_to_pathids[edge]
+        # get all paths on this meta_edge
+        path_indices = meta_edge_to_pathids[meta_edge]
+        c_e = paths_dict[meta_edge][1]
 
-        # get edge capacity
-        c_e = cap_list[edge]
-
-        # ensure that all paths on a given edge meet the edge constraint
+        # ensure that all paths on a given meta_edge meet the meta_edge constraint
         constr_vars = [path_variables[p] for p in path_indices]
+        print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
         m.addConstr(quicksum(constr_vars) <= c_e)
 
     return LpSolver(m, None, r1_outfile), r1_path_to_commodities
@@ -107,6 +111,7 @@ def r3_lp():
     pass
 
 if __name__ == '__main__':
+    #G = toy_network_1()
     G = toy_network_2()
     tm = generate_uniform_tm(G)
     num_clusters = int(np.sqrt(len(G.nodes)))
