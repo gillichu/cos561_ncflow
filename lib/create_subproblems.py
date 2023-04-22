@@ -173,7 +173,11 @@ def construct_subproblems(G, tm, num_clusters=3):
             clusters_commodities_dict[s_k_cluster_id].append((k, (s_k, t_k, d_k)))
     agg_commodities_dict = {(k, (s_k_cluster_id, t_k_cluster_id, sum(commodities))): commodities for k, ((s_k_cluster_id, t_k_cluster_id), commodities) in enumerate(agg_commodities_dict.items())}
 
-    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict
+    # Create a hash function/dictionary for cluster ids
+    hash_for_clusterid = defaultdict(dict)
+    for i in range(0,num_clusters): hash_for_clusterid[i] = i + len(G.nodes)
+
+    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid
 
 
 ### EXAMPLE 
@@ -224,7 +228,7 @@ if __name__ == '__main__':
     vis_graph(G, title="original network")
 
     num_clusters = int(np.sqrt(len(G.nodes)))
-    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
+    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict,_ = construct_subproblems(G, tm, num_clusters=num_clusters)
 
 
     vis_graph(G_agg, title="aggregated network (using metanodes)")

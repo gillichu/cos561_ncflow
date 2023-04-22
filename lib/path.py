@@ -89,6 +89,18 @@ def path_meta(G, G_agg, num_clusters, agg_edge_dict, iter_id, k = None):
 
     return paths
 
+# Find all paths for every pair of internal nodes in metanode(meta_id)
+# OUTPUT: paths[(u,v)] = [path1,path2,...], where path1=[u,n1,n2,...,v]
+def path_r2(meta_id,G_clusters_dict):
+    G_sub = G_clusters_dict[meta_id]
+    intraNodes = list(G_sub.nodes)
+    intra_pairs = list(combinations(intraNodes, 2))
+    paths = defaultdict(dict)
+    for (u, v) in intra_pairs:
+        if u == v: continue
+        paths[(u,v)] = path_simple(G_sub,u,v) 
+        paths[(v,u)] = path_simple(G_sub,v,u) 
+    return paths
 
 def toy_network_2():
     G = nx.DiGraph()
@@ -102,7 +114,6 @@ def toy_network_2():
     G.add_node(7, pos=(3, 0))
     G.add_node(8, pos=(2, -1))
 
-    cap1, cap2 = 1, 2
     add_bi_edge(G, 0, 1, capacity=1)
     add_bi_edge(G, 0, 2, capacity=2)
     add_bi_edge(G, 1, 2, capacity=3)
@@ -118,17 +129,44 @@ def toy_network_2():
     add_bi_edge(G, 0, 3, capacity=1)                                                                     
     add_bi_edge(G, 2, 5, capacity=1)
     add_bi_edge(G, 4, 7, capacity=1)  # 12
+    return G
 
+def toy_network_3():
+    G = nx.DiGraph()
+    G.add_node(0, pos=(-3, 1))
+    G.add_node(1, pos=(-2, 0))
+    G.add_node(2, pos=(-3, -1))
+    G.add_node(3, pos=(-1, 1))
+    G.add_node(4, pos=(1, 0))
+    G.add_node(5, pos=(-1, -1))
+    G.add_node(6, pos=(2, 1))
+    G.add_node(7, pos=(3, 0))
+    G.add_node(8, pos=(2, -1))
+
+    add_bi_edge(G, 0, 1, capacity=1)
+    add_bi_edge(G, 0, 2, capacity=2)
+    add_bi_edge(G, 1, 2, capacity=3)
+    
+    add_bi_edge(G, 3, 4, capacity=4)  # 4
+    add_bi_edge(G, 3, 5, capacity=5)  # 5
+    add_bi_edge(G, 4, 5, capacity=6)  # ...
+
+    add_bi_edge(G, 6, 7, capacity=7)
+    add_bi_edge(G, 6, 8, capacity=8)
+    add_bi_edge(G, 7, 8, capacity=9)
+
+    add_bi_edge(G, 0, 3, capacity=1)                                                                     
+    add_bi_edge(G, 2, 5, capacity=2)
+    add_bi_edge(G, 4, 7, capacity=3)  # 12
     return G
 
 
 if __name__ == '__main__':
-    G = toy_network_2()
+    G = toy_network_3()
     tm = generate_uniform_tm(G)
-    # vis_graph(G)
 
     num_clusters = int(np.sqrt(len(G.nodes)))
-    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
+    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid = construct_subproblems(G, tm, num_clusters=num_clusters)
     vis_graph(G,orig_to_agg_node=orig_to_agg_node)
     vis_graph(G_agg)
 
@@ -143,8 +181,9 @@ if __name__ == '__main__':
     paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
     print('path_meta ', paths, '\n')
 
-    print(compute_agg_path_cap(G_agg,[0,1,2],selected_inter_edge))
-    print(compute_agg_path_cap(G_agg,[2,0,1],selected_inter_edge))
+    r2_paths = path_r2(2,G_clusters_dict)
+    print('r2_paths for cluster 2: ', r2_paths, '\n')
+    
 
 
 

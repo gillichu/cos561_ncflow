@@ -111,7 +111,7 @@ if __name__ == '__main__':
     num_clusters = int(np.sqrt(len(G.nodes)))
     iter_id = 0
 
-    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
+    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid = construct_subproblems(G, tm, num_clusters=num_clusters)
 
     # original edges on the collapsed graph, outputs dict (metanode, metanode) = set of paths
     paths_dict = path_meta(G, G_agg, num_clusters, agg_edge_dict, iter_id)
