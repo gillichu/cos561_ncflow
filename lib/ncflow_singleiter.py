@@ -1,3 +1,4 @@
+import os
 import re
 from LpSolver import *
 from gurobipy import GRB, Model, quicksum
@@ -22,9 +23,12 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
     print("path dictionary", paths_dict)
 
     r1_outfile = 'r1_out.txt'
+    os.remove(r1_outfile)
+
     commodities = []
     r1_path_to_commodities = dict()
     r1_commodity_to_pathids = defaultdict(list)
+    pathidx_to_edgelist = defaultdict(list)
     # holds meta edges that actually exist between clusters
     meta_edge_to_pathids = defaultdict(list)
     cap_list = nx.get_edge_attributes(G, 'capacity')
@@ -45,6 +49,8 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         for edge in nodelist_to_edge_list(path_nodelist):
             print("meta-edge", edge, "demand:", d_k, "capacity", cap_list[edge])
             meta_edge_to_pathids[edge].append(path_idx)
+
+            pathidx_to_edgelist[path_idx].append(edge)
             
         # get the path to commodity (for r3)
         r1_path_to_commodities[path_idx] = commodity_idx
@@ -81,23 +87,25 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
         m.addConstr(quicksum(constr_vars) <= c_e)
 
-    return LpSolver(m, None, r1_outfile), r1_path_to_commodities
+    return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist
 
-def get_solver_results(model, G, path_id_to_commod_id, all_paths):
-    num_edges = len(G.edges)
+def get_solver_results(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
+    num_edges = len(paths.keys())
     num_paths = len(set(path_id_to_commod_id.values()))
+    
     # set up edge to edge idx, these are original edges in the aggregated graph
     edge_dict = dict()
-    for edge_idx, edge in enumerate(G.edges):
+    for edge_idx, edge in enumerate(paths.keys()):
         edge_dict[edge] = edge_idx
-    print("Edge_dict", edge_dict)
 
     sol_mat = np.zeros((num_edges, num_paths), dtype=np.float32)
     for var in model.getVars():
         # match var name back to path
         p = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
+        print("var", p)
         commodity_idx = path_id_to_commod_id[p]
-        for edge in nodelist_to_edge_list(all_paths[p]):
+        # from path_idx get edges
+        for edge in pathidx_to_edgelist[p]:
             sol_mat[edge_dict[edge], commodity_idx] += var.x
     return sol_mat
 
@@ -124,7 +132,7 @@ if __name__ == '__main__':
     # select paths for r1, this iteration
     paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
     
-    r1_solver, r1_path_to_commod = r1_lp(G, paths, agg_commodities_dict)
+    r1_solver, r1_path_to_commod, pathidx_to_edgelist = r1_lp(G, paths, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
-    #print(get_solver_results(r1_solver._model, G_agg, r1_path_to_commod, all_r1_paths))
+    print(get_solver_results(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
