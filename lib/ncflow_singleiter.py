@@ -33,6 +33,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
     for key in agg_commodities_dict.keys():
         commodity_idx, pathinfo = key
         s_k, t_k, d_k = pathinfo
+        print("looking up:", s_k, t_k)
 
         # get single path between each pair of meta nodes
         # should only have 1, since selected inter-cluster edges
@@ -113,16 +114,12 @@ if __name__ == '__main__':
 
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid = construct_subproblems(G, tm, num_clusters=num_clusters)
 
-    # original edges on the collapsed graph, outputs dict (metanode, metanode) = set of paths
-    paths_dict = path_meta(G, G_agg, num_clusters, agg_edge_dict, iter_id)
+    print("G clusters dict", [(k, G_clusters_dict[k].nodes()) for k in G_clusters_dict])
 
     # select paths for r1, this iteration
-    selected_inter_edges = select_inter_edge(G, agg_edge_dict, iter_id)
-    print('selected_inter_edges', selected_inter_edges)
+    paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
     
-
-    
-    r1_solver, r1_path_to_commod = r1_lp(G, selected_inter_edges, agg_commodities_dict)
+    r1_solver, r1_path_to_commod = r1_lp(G, paths, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
     #print(get_solver_results(r1_solver._model, G_agg, r1_path_to_commod, all_r1_paths))
