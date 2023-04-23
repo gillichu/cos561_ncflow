@@ -136,7 +136,7 @@ def r2_lp():
 def reconciliation_lp():
     pass
 
-def r3_lp():
+def r3_lp(r2_solution_dict, u_meta, v_meta, G, orig_to_agg_node):
     reconciliation_outfile = 'reconciliation_out.txt'
     os.remove(reconciliation_outfile)
 
