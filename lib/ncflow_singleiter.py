@@ -184,7 +184,7 @@ def reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, agg_to_orig_nodes, or
 
         k_meta, (s_k, t_k, d_k) = shared_meta_commodity
 
-        # sum outflow from u <= f_{k_local}
+        # sum of outflow from u <= f_{k_local}
         u_outflows_dict = defaultdict()
         for (u,v), outflow in u_meta_flows:
             if v==v_hat_out:
@@ -218,7 +218,36 @@ def reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, agg_to_orig_nodes, or
     obj = quicksum(commodity_vars)
     m.setObjective(obj, GRB.MAXIMIZE)
 
-    return LpSolver(m, None, reconciliation_outfile), G_u_meta_v_meta, shared_meta_commodities, nodes_in_u_meta, nodes_in_v_meta
+    return LpSolver(m, None, reconciliation_outfile), G_u_meta_v_meta, shared_meta_commodities, nodes_in_u_meta, nodes_in_v_meta, all_u_meta_v_meta_inter_edges
+
+def extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes, orig_to_agg_node):
+    num_clusters = len(agg_to_orig_nodes)
+    all_metanode_pairs = [(u_meta, v_meta) for u_meta in range(num_clusters) for v_meta in range(num_clusters) if u_meta != v_meta]
+
+    reconciliation_solutions_dicts = {}
+    for (u_meta, v_meta) in all_metanode_pairs:
+        r3_solver, G_u_meta_v_meta, shared_meta_commodities, nodes_in_u_meta, nodes_in_v_meta, all_u_meta_v_meta_inter_edges = reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, agg_to_orig_nodes, orig_to_agg_node)
+        r3_solver.solve_lp(Method.BARRIER)
+        
+        model = r3_solver._model
+        l = []
+        for var in model.getVars():
+            match = re.match(r'f\[(\d+)\]', var.varName)
+            edge_idx, k_local = int(match.group(1)), int(match.group(2))
+            edge = all_u_meta_v_meta_inter_edges[edge_idx]
+
+            k_meta, (s_k, t_k, d_k) = shared_meta_commodities[k_local]
+            l.append(edge, k_meta, s_k, t_k, d_k, var.x)
+                     
+        sol_dict_def = defaultdict(list)
+        for edge, k_meta, s_k, t_k, d_k, flow in l:
+            sol_dict_def[(k_meta, (s_k, t_k, d_k))].append((edge, flow))
+
+        sol_dict_def = dict(sol_dict_def)
+        reconciliation_solutions_dicts[(u_meta, v_meta)] = sol_dict_def
+
+    # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (edge, flow)
+    return reconciliation_solutions_dicts
 
 def r3_lp():
     pass
@@ -248,3 +277,9 @@ if __name__ == '__main__':
     print(r1_solver._model.objVal)
     #print(get_solution_as_mat(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
     print("solution as dict", get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod))
+
+    # # eventually uncomment this
+    # # format: u_meta --> (k_meta, (s_k, t_k, d_k)) --> (true edge, flow)
+    # r2_solution_dict = extract_r2_solution_dict() # to be implemented (?)
+    # # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (true edge, flow)
+    # reconciliation_solutions_dicts = extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes, orig_to_agg_node)
