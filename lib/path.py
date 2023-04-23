@@ -55,37 +55,38 @@ def select_inter_edge(G, agg_edge_dict, iter_id):
     return selected_inter_edge
     
 # Check if input path is a valid path, return the min edge cap, i.e. path bottleneck capacity
-def compute_agg_path_cap(G_agg,path, selected_inter_edge):
+def compute_agg_path_cap(G_agg,path, bundled_cap):
     if nx.is_path(G_agg, path) == False:
         print("not a path in compute_agg_path_cap!")
         return 0
 
     min = 999999
     for (u_cluster,v_cluster) in path_to_edgelist(path):
-        (_,cap) = selected_inter_edge[(u_cluster,v_cluster)]
+        cap = bundled_cap[(u_cluster,v_cluster)]
         if cap < min: min = cap
     return min
 
 # Find selected path from u_cluster to v_cluster in the iter_id-th iteration 
-def path_meta_pair(G, G_agg, u_cluster, v_cluster, agg_edge_dict, iter_id,  k = None):
+def path_meta_pair(G, G_agg, u_cluster, v_cluster,bundled_cap, iter_id, k = None):
     paths = path_simple(G_agg, u_cluster,v_cluster,k)
     if len(paths) < 1:
         print("no path found in path_meta_pair!")
         return ([],0)
-    selected_inter_edge = select_inter_edge(G, agg_edge_dict, iter_id)
-    paths = sorted(paths, key = lambda path: compute_agg_path_cap(G_agg,path,selected_inter_edge), reverse=True)
-    return (paths[0],compute_agg_path_cap(G_agg,paths[0],selected_inter_edge))
+    # selected_inter_edge = select_inter_edge(G, agg_edge_dict, iter_id)
+    paths = sorted(paths, key = lambda path: compute_agg_path_cap(G_agg,path,bundled_cap), reverse=True)
+    path = paths[iter_id % len(paths)]
+    return (path,compute_agg_path_cap(G_agg,path,bundled_cap))
 
 # Find selected path for every pair of clusters in the iter_id-th iteration
 # OUTPUT: paths[(u_cluster,v_cluster)] = 
 #           (the selected path represented by a list of cluster node ids, bottleneck cap of the selected path)
-def path_meta(G, G_agg, num_clusters, agg_edge_dict, iter_id, k = None):
+def path_meta(G, G_agg, num_clusters, bundled_cap, iter_id, k = None):
     meta_pairs = list(combinations(range(0,num_clusters), 2))
     paths = defaultdict(dict)
     for (u_cluster, v_cluster) in meta_pairs:
         if u_cluster == v_cluster: continue
-        paths[(u_cluster,v_cluster)] = path_meta_pair(G, G_agg, u_cluster, v_cluster, agg_edge_dict, iter_id, k)
-        paths[(v_cluster,u_cluster)] = path_meta_pair(G, G_agg, v_cluster, u_cluster, agg_edge_dict, iter_id, k)
+        paths[(u_cluster,v_cluster)] = path_meta_pair(G, G_agg, u_cluster, v_cluster, bundled_cap, iter_id, k)
+        paths[(v_cluster,u_cluster)] = path_meta_pair(G, G_agg, v_cluster, u_cluster, bundled_cap, iter_id, k)
 
     return paths
 
@@ -188,7 +189,9 @@ if __name__ == '__main__':
     selected_inter_edge = select_inter_edge(G, agg_edge_dict, 0)
     print('selected_inter_edge ', selected_inter_edge, '\n')
 
-    paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
+    bundle_cap = bundle_cap(G, agg_edge_dict)
+
+    paths = path_meta(G, G_agg, num_clusters, bundle_cap, 0)
     print('path_meta ', paths, '\n')
 
     r2_paths = path_r2(2,G_clusters_dict)

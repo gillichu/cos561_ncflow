@@ -156,7 +156,8 @@ if __name__ == '__main__':
     print("edge_to_bundlecap", edge_to_bundlecap)
 
     # select paths for r1, this iteration
-    paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0) 
+    bundle_cap = bundle_cap(G, agg_edge_dict)
+    paths = path_meta(G, G_agg, num_clusters, bundle_cap, 0) 
     #paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0, edge_to_bundlecap)
     print("paths", paths)
     
