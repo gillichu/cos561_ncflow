@@ -102,6 +102,16 @@ def path_r2(meta_id,G_clusters_dict):
         paths[(v,u)] = path_simple(G_sub,v,u) 
     return paths
 
+# FOR R2: compute the v_hat_ins and v_hat_outs dictionary
+# e.g. for cluster id i, v_hat_ins[i] gives a list of cluster nodes that are predecessors to i
+def v_hat_dict(G_agg):
+    v_hat_ins = defaultdict(dict)
+    v_hat_outs = defaultdict(dict)
+    for i in range(0,len(G_agg.nodes)):
+        v_hat_ins[i] = list(G_agg.predecessors(i))
+        v_hat_outs[i] = list(G_agg.successors(i))
+    return v_hat_ins, v_hat_outs
+
 def toy_network_2():
     G = nx.DiGraph()
     G.add_node(0, pos=(-3, 1))
@@ -183,8 +193,11 @@ if __name__ == '__main__':
 
     r2_paths = path_r2(2,G_clusters_dict)
     print('r2_paths for cluster 2: ', r2_paths, '\n')
-    
 
+    v_hat_ins, v_hat_outs = v_hat_dict(G_agg)
+    print('v_hat_ins: ', v_hat_ins, '\n')
+    print('v_hat_outs: ', v_hat_outs, '\n')
+    
 
 
 
