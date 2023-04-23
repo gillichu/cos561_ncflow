@@ -133,10 +133,7 @@ def get_solution_as_dict(model, pathidx_to_edgelist, commod_info_dict, path_id_t
 def r2_lp():
     pass
 
-def reconciliation_lp():
-    pass
-
-def r3_lp(r2_solution_dict, u_meta, v_meta, G, orig_to_agg_node):
+def reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, orig_to_agg_node):
     reconciliation_outfile = 'reconciliation_out.txt'
     os.remove(reconciliation_outfile)
 
@@ -223,6 +220,8 @@ def r3_lp(r2_solution_dict, u_meta, v_meta, G, orig_to_agg_node):
 
     return LpSolver(m, None, reconciliation_outfile), G_u_meta_v_meta, shared_meta_commodities, nodes_in_u_meta, nodes_in_v_meta
 
+def r3_lp():
+    pass
 
 if __name__ == '__main__':
     #G = toy_network_1()
