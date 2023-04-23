@@ -1,5 +1,5 @@
 
-Gurobi 10.0.1 (mac64[arm]) logging started Sun Apr 23 15:54:02 2023
+Gurobi 10.0.1 (mac64[arm]) logging started Sun Apr 23 16:02:45 2023
 
 Set parameter LogFile to value "r1_out.txt"
 Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])

@@ -41,7 +41,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
     for key in agg_commodities_dict.keys():
         commodity_idx, pathinfo = key
         s_k, t_k, d_k = pathinfo
-        print("looking up:", s_k, t_k)
+        # print("looking up:", s_k, t_k)
         commodidx_to_info[commodity_idx] = key
 
         # get single path between each pair of meta nodes
@@ -49,7 +49,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
         path_nodelist = paths_dict[(s_k, t_k)][0] 
         # original node edges
         for edge in nodelist_to_edgelist(path_nodelist):
-            print("meta-edge", edge, "demand:", d_k, "capacity", cap_list[edge])
+            # print("meta-edge", edge, "demand:", d_k, "capacity", cap_list[edge])
             meta_edge_to_pathids[edge].append(path_idx)
 
             pathidx_to_edgelist[path_idx].append(edge)
@@ -62,7 +62,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
         path_idx += 1
     
     m = Model('max-flow: R1')
-    print("commodities", commodities)
+    # print("commodities", commodities)
     
     # create a variable for each path
     path_variables = m.addVars(path_idx, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
@@ -156,9 +156,7 @@ if __name__ == '__main__':
     print("edge_to_bundlecap", edge_to_bundlecap)
 
     # select paths for r1, this iteration
-    bundle_cap = bundle_cap(G, agg_edge_dict)
-    paths = path_meta(G, G_agg, num_clusters, bundle_cap, 0) 
-    #paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0, edge_to_bundlecap)
+    paths = path_meta(G, G_agg, num_clusters, edge_to_bundlecap, 0)
     print("paths", paths)
     
     r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
