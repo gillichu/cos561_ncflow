@@ -6,7 +6,7 @@ from path import *
 from create_subproblems import *
 from itertools import tee, combinations
 
-def nodelist_to_edge_list(path):
+def nodelist_to_edgelist(path):
     a, b = tee(path)
     next(b, None)
     return zip(a, b)
@@ -26,6 +26,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
     os.remove(r1_outfile)
 
     commodities = []
+    commodidx_to_info = dict()
     r1_path_to_commodities = dict()
     r1_commodity_to_pathids = defaultdict(list)
     pathidx_to_edgelist = defaultdict(list)
@@ -41,12 +42,13 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         commodity_idx, pathinfo = key
         s_k, t_k, d_k = pathinfo
         print("looking up:", s_k, t_k)
+        commodidx_to_info[commodity_idx] = key
 
         # get single path between each pair of meta nodes
         # should only have 1, since selected inter-cluster edges
         path_nodelist = paths_dict[(s_k, t_k)][0] 
         # original node edges
-        for edge in nodelist_to_edge_list(path_nodelist):
+        for edge in nodelist_to_edgelist(path_nodelist):
             print("meta-edge", edge, "demand:", d_k, "capacity", cap_list[edge])
             meta_edge_to_pathids[edge].append(path_idx)
 
@@ -87,9 +89,9 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
         print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
         m.addConstr(quicksum(constr_vars) <= c_e)
 
-    return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist
+    return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info
 
-def get_solver_results(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
+def get_solution_as_mat(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
     num_edges = len(paths.keys())
     num_paths = len(set(path_id_to_commod_id.values()))
     
@@ -108,6 +110,23 @@ def get_solver_results(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
         for edge in pathidx_to_edgelist[p]:
             sol_mat[edge_dict[edge], commodity_idx] += var.x
     return sol_mat
+    
+
+def get_solution_as_dict(model, pathidx_to_edgelist, commod_info_dict, path_id_to_commod_id):
+    # outputs type dictionary:
+    #   key: (commodity_id, (src, sink, demand))
+    #   value: [((n1, n2), flow), ((n2, n3), flow), ...] 
+
+    sol_dict_def = defaultdict(list)
+    for var in model.getVars():
+        path_idx = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
+        commod_id = path_id_to_commod_id[path_idx]
+        
+        k, (s_k, t_k, d_k) = commod_info_dict[commod_id]
+        sol_dict_def[(k, (s_k, t_k, d_k))] += [(edge, var.x) for edge in pathidx_to_edgelist[path_idx]]
+
+    sol_dict_def = dict(sol_dict_def)
+    return sol_dict_def
 
 def r2_lp():
     pass
@@ -132,7 +151,8 @@ if __name__ == '__main__':
     # select paths for r1, this iteration
     paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
     
-    r1_solver, r1_path_to_commod, pathidx_to_edgelist = r1_lp(G, paths, agg_commodities_dict)
+    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
-    print(get_solver_results(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
+    #print(get_solution_as_mat(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
+    print("solution as dict", get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod))
