@@ -133,18 +133,18 @@ def get_solution_as_dict(model, pathidx_to_edgelist, commod_info_dict, path_id_t
 def r2_lp():
     pass
 
-def reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, orig_to_agg_node):
+
+
+def reconciliation_lp(r2_solution_dict, u_meta, v_meta, G, agg_to_orig_nodes, orig_to_agg_node):
     reconciliation_outfile = 'reconciliation_out.txt'
     os.remove(reconciliation_outfile)
 
     # create a subgraph to represent flows from u_meta to v_meta
-    nodes_in_u_meta = set()
-    nodes_in_v_meta = set()
     G_u_meta_v_meta = nx.DiGraph()
+    nodes_in_u_meta, nodes_in_v_meta = set(), set()
 
     v_hat_ins, v_hat_outs = v_hat_dict(G_agg)
     u_hat_in, v_hat_out = v_hat_ins[u_meta], v_hat_outs[v_meta]
-
 
     all_u_meta_v_meta_inter_edges = [(u,v,G[u][v][CAPACITY]) for u in agg_to_orig_nodes[u_meta] \
                                      for v in G.successors(u) if orig_to_agg_node[v]==v_meta]
