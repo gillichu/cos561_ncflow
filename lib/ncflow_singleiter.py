@@ -91,7 +91,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
 
     return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info
 
-def get_solver_results(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
+def get_solution_as_mat(model, path_id_to_commod_id, paths, pathidx_to_edgelist):
     num_edges = len(paths.keys())
     num_paths = len(set(path_id_to_commod_id.values()))
     
@@ -154,5 +154,5 @@ if __name__ == '__main__':
     r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
-    #print(get_solver_results(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
+    #print(get_solution_as_mat(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
     print("solution as dict", get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod))
