@@ -10,6 +10,15 @@ CAPACITY = 'capacity'
 LABEL = 'label'
 POS = 'pos'
 
+def bundle_cap(G, agg_edge_dict):
+    # agg_edge_dict [(metanodeA, metanodeB): [(a1, b1), (a2, b2)], (metanodeA, metanodeC): [(a1, c1), (a1, c3)], ...]
+    outdict = dict()
+    for agg_edge in agg_edge_dict:
+        outdict[agg_edge] = 0
+        for og_graph_edge in agg_edge_dict[agg_edge]:
+            outdict[agg_edge] += G.edges[og_graph_edge]['capacity']
+    return outdict
+
 def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = [], title=None):
     '''
     Visualize the graph

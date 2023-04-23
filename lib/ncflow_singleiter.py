@@ -16,7 +16,7 @@ def solve_lp():
     pass 
 
 
-def r1_lp(G, paths_dict, agg_commodities_dict):
+def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
     ### expects input:
     ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
     ### paths_dict contains meta node pairs that may not be directly connected
@@ -82,7 +82,9 @@ def r1_lp(G, paths_dict, agg_commodities_dict):
 
         # get all paths on this meta_edge
         path_indices = meta_edge_to_pathids[meta_edge]
-        c_e = paths_dict[meta_edge][1]
+        c_e = edge_to_bundlecap[meta_edge]
+        print("capacity", c_e)
+        # c_e = paths_dict[meta_edge][1]
 
         # ensure that all paths on a given meta_edge meet the meta_edge constraint
         constr_vars = [path_variables[p] for p in path_indices]
@@ -146,12 +148,19 @@ if __name__ == '__main__':
 
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid = construct_subproblems(G, tm, num_clusters=num_clusters)
 
-    print("G clusters dict", [(k, G_clusters_dict[k].nodes()) for k in G_clusters_dict])
+    #print("G clusters dict", [(k, G_clusters_dict[k].nodes()) for k in G_clusters_dict])
+    print("agg_edge_dict", agg_edge_dict)
+    
+    # bundle capacities on inter_edges
+    edge_to_bundlecap = bundle_cap(G, agg_edge_dict)
+    print("edge_to_bundlecap", edge_to_bundlecap)
 
     # select paths for r1, this iteration
-    paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0)
+    paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0) 
+    #paths = path_meta(G, G_agg, num_clusters, agg_edge_dict, 0, edge_to_bundlecap)
+    print("paths", paths)
     
-    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict)
+    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
     #print(get_solution_as_mat(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
