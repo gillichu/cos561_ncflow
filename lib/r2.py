@@ -7,6 +7,7 @@ from create_subproblems import *
 from itertools import tee, combinations, product
 from ncflow_singleiter import *
 
+
 def extract_sol_as_mat2(model, G, path_id_to_commod_id, all_paths):
         edge_idx = {edge: e for e, edge in enumerate(G.edges)}
         sol_mat = np.zeros(
@@ -236,39 +237,37 @@ def r2_lp(current_meta_node, paths_dict, G, G_meta, all_v_hat_in, all_v_hat_out,
 		if s_k_meta != current_meta_node:
 			for v_hat_in in all_v_hat_in:
 				v_meta = virt_to_meta_dict[v_hat_in]
-				if v_meta != current_meta_node:
-					meta_in_flow = r1_sol_mat[v_meta][current_meta_node]
-					if v_hat_in not in v_hat_in_paths or len(v_hat_in_paths[v_hat_in]) == 0:
-						# if meta_in_flow > 0.001:
-						#     print('WARN: v_hat_in{} with flow{} has no grb vars'.format(
-						#         v_hat_in, meta_in_flow))
-						pass
-					else:
-						constr_vars = [path_id_to_commod_id_to_var[p][multi_commod_id]
-							for p in v_hat_in_paths[v_hat_in]
-							for multi_commod_id in path_id_to_multi_commod_ids[p]
-							if multi_commod_id in multi_commod_ids_list]
-						
-						m2.addConstr(quicksum(constr_vars) <= meta_in_flow)
+				meta_in_flow = r1_sol_mat[v_meta][current_meta_node]
+				if v_hat_in not in v_hat_in_paths or len(v_hat_in_paths[v_hat_in]) == 0:
+					# if meta_in_flow > 0.001:
+					#     print('WARN: v_hat_in{} with flow{} has no grb vars'.format(
+					#         v_hat_in, meta_in_flow))
+					pass
+				else:
+					constr_vars = [path_id_to_commod_id_to_var[p][multi_commod_id]
+						for p in v_hat_in_paths[v_hat_in]
+						for multi_commod_id in path_id_to_multi_commod_ids[p]
+						if multi_commod_id in multi_commod_ids_list]
+					
+					m2.addConstr(quicksum(constr_vars) <= meta_in_flow)
 
 		if t_k_meta != current_meta_node:
 			for v_hat_out in all_v_hat_out:
 				v_meta = virt_to_meta_dict[v_hat_out]
-				if v_meta != current_meta_node:
-					meta_out_flow = r1_sol_mat[current_meta_node][v_meta]
-					if v_hat_out not in v_hat_out_paths or len(v_hat_out_paths[v_hat_out]) == 0:
-						# if meta_out_flow > 0.001:
-						#     print('WARN: v_hat_out{} with flow{} has now grb vars'.format(
-						#         v_hat_out, meta_out_flow))
-						pass
-					else:
-						constr_vars = [
-							path_id_to_commod_id_to_var[p][multi_commod_id]
-							for p in v_hat_out_paths[v_hat_out]
-							for multi_commod_id in path_id_to_multi_commod_ids[p]
-							if multi_commod_id in multi_commod_ids_list]
+				meta_out_flow = r1_sol_mat[current_meta_node][v_meta]
+				if v_hat_out not in v_hat_out_paths or len(v_hat_out_paths[v_hat_out]) == 0:
+					# if meta_out_flow > 0.001:
+					#     print('WARN: v_hat_out{} with flow{} has now grb vars'.format(
+					#         v_hat_out, meta_out_flow))
+					pass
+				else:
+					constr_vars = [
+						path_id_to_commod_id_to_var[p][multi_commod_id]
+						for p in v_hat_out_paths[v_hat_out]
+						for multi_commod_id in path_id_to_multi_commod_ids[p]
+						if multi_commod_id in multi_commod_ids_list]
 
-						m2.addConstr(quicksum(constr_vars) <= meta_out_flow)
+					m2.addConstr(quicksum(constr_vars) <= meta_out_flow)
 	
 	return LpSolver(m2, None, r2_outfile)
 
@@ -294,8 +293,8 @@ if __name__ == '__main__':
 
 
 	# test inputs
-	current_meta_node = 0
-	paths_dict = path_r2(0,G_clusters_dict) # dict that takes 
+	current_meta_node = 2
+	paths_dict = path_r2(2,G_clusters_dict) # dict that takes 
 	G_meta = G_agg
 	
 	r1_sol_dict = get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod)
@@ -308,8 +307,8 @@ if __name__ == '__main__':
 
 	# find all_v_hat_in and all_v_hat_out
 	all_v_hat_ins, all_v_hat_outs = v_hat_dict(G_agg)
-	all_v_hat_in = all_v_hat_ins[0]
-	all_v_hat_out = all_v_hat_outs[0]
+	all_v_hat_in = all_v_hat_ins[2]
+	all_v_hat_out = all_v_hat_outs[2]
 
 	intra_commods_dict = defaultdict(list)
 	meta_commodity_dict = defaultdict(list)
@@ -325,7 +324,7 @@ if __name__ == '__main__':
 		else:
 			intra_commods_dict[s_k_meta].append((k, (s_k, t_k, d_k)))
 
-	intra_commods = intra_commods_dict[0]
+	intra_commods = intra_commods_dict[2]
 
 	r2_sol = r2_lp(current_meta_node, paths_dict, G, G_meta, all_v_hat_in, all_v_hat_out, intra_commods, partition_vector, r1_sol_dict, meta_commodity_dict, r1_sol_mat)
 	print(r2_sol.solve_lp(Method.BARRIER))
