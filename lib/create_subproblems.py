@@ -86,7 +86,13 @@ def get_node_info(G, node, info_str=LABEL):
      - information extracted about node as specified by info_str
     '''
     try:
-       info = G.nodes.data(info_str)[node]
+        #info = G.nodes.data(info_str)[node]
+        for nid, info in G.nodes.data(info_str):
+            if node == nid:
+                return info
+            else:
+                return False
+       #info = G.nodes.data(info_str)[node]
     except Exception as e:
         print(e) 
         print(f'Request for {info_str} is invalid')

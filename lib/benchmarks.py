@@ -1,6 +1,7 @@
 from create_subproblems import partition_network
 from preprocess import *
 from create_subproblems import * 
+from path import * 
 
 ### RUNNING PF4
 
@@ -14,32 +15,48 @@ num_nodes = len(G.nodes())
 
 # vis_graph(G)
 
-print("start with", len(G.nodes), "nodes")
+print("start with", len(G.nodes), "nodes", "tm of shape", tm.shape)
+dropped_nodes = []
 # fill in the position 
 node_ids = list(G.nodes())
 for node_id in node_ids:
     node = G.nodes[node_id]
-    if 'Latitude' not in node or 'Longitude' not in node:
+    if 'Latitude' not in node or 'Longitude' not in node or 'label' not in node:
         G.remove_node(node_id)
+        dropped_nodes.append(node_id)
         continue
 
-print("left with", len(G.nodes), "nodes")
+print('dropped_nodes', dropped_nodes)
+tm = np.delete(tm, dropped_nodes, axis=0)
+tm = np.delete(tm, dropped_nodes, axis=1)
+
+# remap all node indices in graphfile and traffic matrix
+mapping = {node_id: nidx for nidx, node_id in enumerate(G.nodes)}
+G = nx.relabel_nodes(G, mapping)
+#print(G.nodes())
+
+print("resulting graph", G)
+print("left with", len(G.nodes), "nodes and", "tm of shape", tm.shape)
+
 node_ids = list(G.nodes())
 for node_id in node_ids:
-    #print("node_id", node_id)
     node = G.nodes[node_id]
-    #print("node", node)
-
     node['pos'] = [node['Latitude'], node['Longitude']]
 
-    #print('node[pos]', node['pos'])
+# rename the capacity from 'cap' to 'capacity' to fit expected
+for u, v, a in G.edges(data=True):
+    # print("edge", u, v, a)
+    G[u][v]['capacity'] = G[u][v]['cap']
 
+
+#print('G.nodes.data(pos)', G.nodes.data('pos'))
 for node_id in node_ids:
-    node = G.nodes[node_id]
-    assert 'pos' in node
+    assert G.nodes.data('pos')[node_id]
 
 print("example node:", G.nodes[0])
 num_nodes = len(G.nodes)
+print("num_nodes", num_nodes)
+
 # perform fm partitioning
 # partition_vector = partition_network(G, num_clusters=42)
 
