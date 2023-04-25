@@ -249,11 +249,87 @@ def extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes,
     # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (edge, flow)
     return reconciliation_solutions_dicts
 
-def r3_lp():
-    pass
+# reconciliation_sol_dict[(u_meta,v_meta)][(u,v)]=flow, where (u,v) is an actual edge between (u_meta,v_meta)
+# r2_sol_dict[meta_id]
+def r3_lp( u_meta, v_meta, reconciliation_sol_dict, r2_sol_dict, r1_paths_dict):
+
+    # Setting up the model
+    m = Model(f"R3 LP for [meta_node (out) = {u_meta}][meta_node (in) = {v_meta}]")
+    r3_outfile = 'r3_out.txt'
+    os.remove(r3_outfile)
+
+    # Compute commodity list
+    recon_sol_dict = reconciliation_sol_dict[(u_meta, v_meta)]
+    commodities = recon_sol_dict.keys()
+    num_commodities = len(commodities)
+    print('commodities: ',commodities, '\n')
+    print('num_commodities: ',num_commodities, '\n')
+  
+    # Add one variable for each commodities between u and v
+    commodity_vars = m.addVars(num_commodities, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
+
+    # Set objective
+    obj = quicksum(commodity_vars)
+    m.setObjective(obj, GRB.MAXIMIZE)
+
+    # Add demand constraints (and get total reconciliation flow as well as sum flow variables for each sink and tank node)
+    total_recon_flow = 0
+    commod_by_sink = defaultdict(dict)
+    commod_by_tank = defaultdict(dict)
+    for commod_id, (k_meta, (s_k, t_k, d_k)) in enumerate(commodities):
+        print("Adding demand constraint: for commod_id = ", commod_id, " k_meta = ", k_meta, ", add flow <= ", d_k)
+        m.addConstr(commodity_vars[commod_id] <= d_k)
+
+        # update total_recon_flow
+        (e,flow)= recon_sol_dict[(k_meta, (s_k, t_k, d_k))]
+        total_recon_flow += flow
+
+        #  update commod lists
+        if commod_by_sink.get(s_k)==None:
+            commod_by_sink[s_k] += commodity_vars[commod_id]
+        else:
+            commod_by_sink[s_k] = commodity_vars[commod_id]
+        if commod_by_tank.get(t_k)==None:
+            commod_by_tank[t_k] += commodity_vars[commod_id]
+        else:
+            commod_by_tank[t_k] = commodity_vars[commod_id]
+
+    # Add total recon flow constraint
+    print("Adding recon constraint: sum of flows <= ", total_recon_flow)
+    m.addConstr(quicksum(commodity_vars) <= total_recon_flow)
+
+    # Add r2 flow constraints for each s in u_meta
+    r2_sol_u = r2_sol_dict[u_meta]
+    r2_flow_by_sink = defaultdict(dict)
+    for (k_meta, (s_k, t_k, d_k)) in r2_sol_u.keys():
+        (e,flow)= r2_sol_u[(k_meta, (s_k, t_k, d_k))]
+        #  update commod lists
+        if r2_flow_by_sink.get(s_k)==None:
+            r2_flow_by_sink[s_k] += flow
+        else:
+            r2_flow_by_sink[s_k] = flow
+    for s_k in commod_by_sink.keys():
+        print("Adding r2 source constraint: for s_k = ", s_k, " we have ", commod_by_sink[s_k], " <= ", r2_flow_by_sink[s_k])
+        m.addConstr(commod_by_sink[s_k] <= r2_flow_by_sink[s_k])
+
+    # Add r2 flow constraints for each t in v_meta
+    r2_sol_v = r2_sol_dict[v_meta]
+    r2_flow_by_tank = defaultdict(dict)
+    for (k_meta, (s_k, t_k, d_k)) in r2_sol_v.keys():
+        (e,flow)= r2_sol_v[(k_meta, (s_k, t_k, d_k))]
+        #  update commod lists
+        if r2_flow_by_tank.get(t_k)==None:
+            r2_flow_by_tank[t_k] += flow
+        else:
+            r2_flow_by_tank[t_k] = flow
+    for t_k in commod_by_tank.keys():
+        print("Adding r2 tank constraint: for t_k = ", t_k, " we have ", commod_by_tank[t_k], " <= ", r2_flow_by_tank[t_k])
+        m.addConstr(commod_by_tank[t_k] <= r2_flow_by_tank[t_k])
+    
+
+    return LpSolver(m, None, r3_outfile)
 
 if __name__ == '__main__':
-    #G = toy_network_1()
     G = toy_network_2()
     tm = generate_uniform_tm(G)
     num_clusters = int(np.sqrt(len(G.nodes)))
