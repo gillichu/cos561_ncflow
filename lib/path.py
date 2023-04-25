@@ -2,6 +2,7 @@ import networkx as nx
 from create_subproblems import *
 from itertools import combinations
 from collections import defaultdict
+from itertools import tee, combinations, product
 
 # Convert path to simple path by removing edges between duplicate nodes
 def to_simple_path(path):
@@ -92,26 +93,67 @@ def path_meta(G, G_agg, num_clusters, bundled_cap, iter_id, k = None):
 
 # Find all paths for every pair of internal nodes in metanode(meta_id)
 # OUTPUT: paths[(u,v)] = [path1,path2,...], where path1=[u,n1,n2,...,v]
-def path_r2(meta_id,G_clusters_dict):
-    G_sub = G_clusters_dict[meta_id]
-    intraNodes = list(G_sub.nodes)
-    intra_pairs = list(combinations(intraNodes, 2))
+def path_r2(meta_id,subgraph,all_v_hat_in, all_v_hat_out, agg_to_orig_nodes):
+    v_hat_in, v_hat_out = all_v_hat_in[meta_id], all_v_hat_out[meta_id]
+    nodes = agg_to_orig_nodes[meta_id]
+    from_nodes = set(nodes).union(v_hat_in)
+    to_nodes = set(nodes).union(v_hat_out)
+
     paths = defaultdict(dict)
-    for (u, v) in intra_pairs:
-        if u == v: continue
-        paths[(u,v)] = path_simple(G_sub,u,v) 
-        paths[(v,u)] = path_simple(G_sub,v,u) 
+    for s, t in product(from_nodes, to_nodes):
+        try:
+            path = path_simple(subgraph,s,t)
+            paths[(s,t)] = path
+        except:
+            continue
     return paths
 
 # FOR R2: compute the v_hat_ins and v_hat_outs dictionary
 # e.g. for cluster id i, v_hat_ins[i] gives a list of cluster nodes that are predecessors to i
-def v_hat_dict(G_agg):
-    v_hat_ins = defaultdict(dict)
-    v_hat_outs = defaultdict(dict)
-    for i in range(0,len(G_agg.nodes)):
-        v_hat_ins[i] = list(G_agg.predecessors(i))
-        v_hat_outs[i] = list(G_agg.successors(i))
+def v_hat_dict(G_agg, meta_to_virt_dict):
+    v_hat_ins = defaultdict(list)
+    v_hat_outs = defaultdict(list)
+    for (u_meta, v_meta) in G_agg.edges:
+        v_hat_ins[v_meta].append(meta_to_virt_dict[u_meta][0])
+        v_hat_outs[u_meta].append(meta_to_virt_dict[v_meta][1])
     return v_hat_ins, v_hat_outs
+
+EPS = 1e-5
+
+def extract_sol_as_mat2(model, G, path_id_to_commod_id, all_paths):
+        edge_idx = {edge: e for e, edge in enumerate(G.edges)}
+        sol_mat = np.zeros(
+            (len(edge_idx), len(set(path_id_to_commod_id.values()))),
+            dtype=np.float32)
+        for var in model.getVars():
+            if var.varName.startswith('f[') and var.x > EPS:
+                match = re.match(r'f\[(\d+)\]', var.varName)
+                p = int(match.group(1))
+                k = path_id_to_commod_id[p]
+                for edge in path_to_edge_list(all_paths[p]):
+                    sol_mat[edge_idx[edge], k] += var.x
+
+        return sol_mat
+
+def get_in_and_out_neighbors(flow_list, curr_meta_node):
+	# input
+	# flow_seq -> list of edges, flow allocation on those edges
+	# current_meta_node
+
+	# return set of in_neighbors, out_neighbors
+
+	in_neighbors, out_neighbors = set(), set()
+	for (u, v), l in flow_list:
+		if u == curr_meta_node:
+			out_neighbors.add(v)
+		elif v == curr_meta_node:
+			in_neighbors.add(u)
+	return in_neighbors, out_neighbors
+
+def path_to_edge_list(path):
+	a, b = tee(path)
+	next(b, None)
+	return zip(a, b)
 
 def toy_network_2():
     G = nx.DiGraph()

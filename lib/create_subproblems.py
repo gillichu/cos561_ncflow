@@ -171,22 +171,34 @@ def construct_subproblems(G, tm, num_clusters=3):
         if len(edges) > 0:
             G_agg.add_edge(u_meta, v_meta)
 
+    meta_to_virt_dict = {}
+    virt_to_meta_dict = {} 
+    v_hat_i = max(G.nodes) + 1
+    for v_meta in G_agg.nodes():
+        meta_to_virt_dict[v_meta] = (v_hat_i, v_hat_i + 1)  # in and out
+        virt_to_meta_dict[v_hat_i] = v_meta
+        virt_to_meta_dict[v_hat_i + 1] = v_meta
+        v_hat_i += 2
+
     # Construct inter and intra cluster commodity dicts
     commodity_list = generate_commodity_list(tm)
     agg_commodities_dict, clusters_commodities_dict = defaultdict(list), defaultdict(list)
     for k, (s_k, t_k, d_k) in commodity_list:
         s_k_cluster_id, t_k_cluster_id = orig_to_agg_node[s_k], orig_to_agg_node[t_k]
         if  s_k_cluster_id != t_k_cluster_id:
-            agg_commodities_dict[(s_k_cluster_id, t_k_cluster_id)].append(d_k)
+            # agg_commodities_dict[(s_k_cluster_id, t_k_cluster_id)].append(d_k)
+            agg_commodities_dict[(s_k_cluster_id, t_k_cluster_id)].append((k, (s_k, t_k, d_k)))
+            
         else:
             clusters_commodities_dict[s_k_cluster_id].append((k, (s_k, t_k, d_k)))
-    agg_commodities_dict = {(k, (s_k_cluster_id, t_k_cluster_id, sum(commodities))): commodities for k, ((s_k_cluster_id, t_k_cluster_id), commodities) in enumerate(agg_commodities_dict.items())}
-
+    # agg_commodities_dict = {(k, (s_k_cluster_id, t_k_cluster_id, sum(commodities))): commodities for k, ((s_k_cluster_id, t_k_cluster_id), commodities) in enumerate(agg_commodities_dict.items())}
+    agg_commodities_dict = {(k, (s_k_cluster_id, t_k_cluster_id, sum(d_k for _, (_, _, d_k) in commodities))): commodities for k, ((s_k_cluster_id, t_k_cluster_id), commodities) in enumerate(agg_commodities_dict.items())}
+    
     # Create a hash function/dictionary for cluster ids
     hash_for_clusterid = defaultdict(dict)
     for i in range(0,num_clusters): hash_for_clusterid[i] = i + len(G.nodes)
 
-    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid
+    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict
 
 
 ### EXAMPLE 
