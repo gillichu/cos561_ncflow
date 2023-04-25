@@ -33,10 +33,14 @@ def compute_path_cap(G, path):
 
 # k shortest edge-disjoint simple paths between u and v
 def path_simple(G, u, v, k = None):
+    #disj_paths = list(nx.all_simple_paths(G, u, v))
     disj_paths = list(nx.edge_disjoint_paths(G, u, v))
+    num_dp = len(disj_paths)
     # Need to make sure paths are simple
     disj_paths = [to_simple_path(path) for path in disj_paths]
     disj_paths = sorted(disj_paths, key = lambda path: len(path))
+    end_num_dp = len(disj_paths)
+    # print(num_dp, end_num_dp)
 
     if k == None or len(disj_paths) < k:
         return disj_paths
