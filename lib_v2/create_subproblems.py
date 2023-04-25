@@ -5,6 +5,7 @@ from itertools import permutations
 import pymetis
 from collections import defaultdict
 import pprint
+import traffic_matrix
 
 CAPACITY = 'capacity'
 LABEL = 'label'
@@ -229,18 +230,6 @@ def toy_network_1():
 
 
     return G
-
-def generate_uniform_tm(G, max_demand=10, seed=0):
-    '''
-    Generate uniform traffic matrix for network G
-    '''
-    np.random.seed(seed)
-    num_nodes = len(G.nodes)
-    tm = np.random.rand(num_nodes, num_nodes) * max_demand
-    tm = tm.astype(np.float32)
-    np.fill_diagonal(tm, 0.0)
-    
-    return tm
 
 if __name__ == '__main__':
     
