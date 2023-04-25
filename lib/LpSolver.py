@@ -24,5 +24,6 @@ class LpSolver(object):
         try: 
             model.optimize()
             return model.objVal
-        except:
+        except Exception as e:
+            print(e)
             print("Model failed to optimize lp.")

@@ -12,19 +12,18 @@ def nodelist_to_edgelist(path):
     next(b, None)
     return zip(a, b)
 
-
 def solve_lp():
     pass 
 
 
-def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
+def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap, r1_outfile="r1_out.txt"):
     ### expects input:
     ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
     ### paths_dict contains meta node pairs that may not be directly connected
-    print("path dictionary", paths_dict)
+    #print("path dictionary", paths_dict.keys())
 
-    r1_outfile = 'r1_out.txt'
-    os.remove(r1_outfile)
+    if os.path.exists(r1_outfile):
+        os.remove(r1_outfile)
 
     commodities = []
     commodidx_to_info = dict()
@@ -34,8 +33,8 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
     # holds meta edges that actually exist between clusters
     meta_edge_to_pathids = defaultdict(list)
     cap_list = nx.get_edge_attributes(G, 'capacity')
-    print("cap list", cap_list)
-    print("agg_commodities_dict.keys", agg_commodities_dict.keys())
+    #print("cap list", cap_list)
+    #print("agg_commodities_dict.keys", agg_commodities_dict.keys())
     
     path_idx = 0
 
@@ -75,7 +74,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
     # add demand constraints
     for _, d_k, path_ids in commodities:
         # sum of all path variables for commodity k (only one) should be <= commodity k's demand (d_k)
-        print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
+        #print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
         m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
 
     # add meta_edge capacity constraints 
@@ -84,12 +83,12 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
         # get all paths on this meta_edge
         path_indices = meta_edge_to_pathids[meta_edge]
         c_e = edge_to_bundlecap[meta_edge]
-        print("capacity", c_e)
+        #print("capacity", c_e)
         # c_e = paths_dict[meta_edge][1]
 
         # ensure that all paths on a given meta_edge meet the meta_edge constraint
         constr_vars = [path_variables[p] for p in path_indices]
-        print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
+        #print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
         m.addConstr(quicksum(constr_vars) <= c_e)
 
     return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info
@@ -111,7 +110,7 @@ def get_solution_as_mat(G_meta,model, path_id_to_commod_id, paths, pathidx_to_ed
     for var in model.getVars():
         # match var name back to path
         p = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
-        print("var", p)
+        #print("var", p)
         commodity_idx = path_id_to_commod_id[p]
         # from path_idx get edges
         for edge in pathidx_to_edgelist[p]:
@@ -511,11 +510,91 @@ def extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes,
     # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (edge, flow)
     return reconciliation_solutions_dicts
 
-def r3_lp():
-    pass
+# reconciliation_sol_dict[(u_meta,v_meta)][(u,v)]=flow, where (u,v) is an actual edge between (u_meta,v_meta)
+# r2_sol_dict[meta_id]
+def r3_lp( u_meta, v_meta, reconciliation_sol_dict, r2_sol_dict, r1_paths_dict):
+
+    # Setting up the model
+    m = Model(f"R3 LP for [meta_node (out) = {u_meta}][meta_node (in) = {v_meta}]")
+    r3_outfile = 'r3_out.txt'
+    os.remove(r3_outfile)
+
+    # Compute commodity list
+    recon_sol_dict = reconciliation_sol_dict[(u_meta, v_meta)]
+    commodities = recon_sol_dict.keys()
+    num_commodities = len(commodities)
+    print('commodities: ',commodities, '\n')
+    print('num_commodities: ',num_commodities, '\n')
+  
+    # Add one variable for each commodities between u and v
+    commodity_vars = m.addVars(num_commodities, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
+
+    # Set objective
+    obj = quicksum(commodity_vars)
+    m.setObjective(obj, GRB.MAXIMIZE)
+
+    # Add demand constraints (and get total reconciliation flow as well as sum flow variables for each sink and tank node)
+    total_recon_flow = 0
+    commod_by_sink = defaultdict(dict)
+    commod_by_tank = defaultdict(dict)
+    for commod_id, (k_meta, (s_k, t_k, d_k)) in enumerate(commodities):
+        print("Adding demand constraint: for commod_id = ", commod_id, " k_meta = ", k_meta, ", add flow <= ", d_k)
+        m.addConstr(commodity_vars[commod_id] <= d_k)
+
+        # update total_recon_flow
+        (e,flow)= recon_sol_dict[(k_meta, (s_k, t_k, d_k))]
+        total_recon_flow += flow
+
+        #  update commod lists
+        if commod_by_sink.get(s_k)==None:
+            commod_by_sink[s_k] += commodity_vars[commod_id]
+        else:
+            commod_by_sink[s_k] = commodity_vars[commod_id]
+        if commod_by_tank.get(t_k)==None:
+            commod_by_tank[t_k] += commodity_vars[commod_id]
+        else:
+            commod_by_tank[t_k] = commodity_vars[commod_id]
+
+    # Add total recon flow constraint
+    print("Adding recon constraint: sum of flows <= ", total_recon_flow)
+    m.addConstr(quicksum(commodity_vars) <= total_recon_flow)
+
+    # Add r2 flow constraints for each s in u_meta
+    r2_sol_u = r2_sol_dict[u_meta]
+    r2_flow_by_sink = defaultdict(dict)
+    for (k_meta, (s_k, t_k, d_k)) in r2_sol_u.keys():
+        (e,flow)= r2_sol_u[(k_meta, (s_k, t_k, d_k))]
+        #  update commod lists
+        if r2_flow_by_sink.get(s_k)==None:
+            r2_flow_by_sink[s_k] += flow
+        else:
+            r2_flow_by_sink[s_k] = flow
+    for s_k in commod_by_sink.keys():
+        print("Adding r2 source constraint: for s_k = ", s_k, " we have ", commod_by_sink[s_k], " <= ", r2_flow_by_sink[s_k])
+        m.addConstr(commod_by_sink[s_k] <= r2_flow_by_sink[s_k])
+
+    # Add r2 flow constraints for each t in v_meta
+    r2_sol_v = r2_sol_dict[v_meta]
+    r2_flow_by_tank = defaultdict(dict)
+    for (k_meta, (s_k, t_k, d_k)) in r2_sol_v.keys():
+        (e,flow)= r2_sol_v[(k_meta, (s_k, t_k, d_k))]
+        #  update commod lists
+        if r2_flow_by_tank.get(t_k)==None:
+            r2_flow_by_tank[t_k] += flow
+        else:
+            r2_flow_by_tank[t_k] = flow
+    for t_k in commod_by_tank.keys():
+        print("Adding r2 tank constraint: for t_k = ", t_k, " we have ", commod_by_tank[t_k], " <= ", r2_flow_by_tank[t_k])
+        m.addConstr(commod_by_tank[t_k] <= r2_flow_by_tank[t_k])
+    
+
+    return LpSolver(m, None, r3_outfile)
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     # G = toy_network_1()
+=======
+>>>>>>> 83ece7f1b03035f50110140750c2e5671f8cd368
     G = toy_network_2()
     tm = generate_uniform_tm(G)
     num_clusters = int(np.sqrt(len(G.nodes)))
@@ -524,19 +603,20 @@ if __name__ == '__main__':
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
 
     #print("G clusters dict", [(k, G_clusters_dict[k].nodes()) for k in G_clusters_dict])
-    print("agg_edge_dict", agg_edge_dict)
+    #print("agg_edge_dict", agg_edge_dict)
     
     # bundle capacities on inter_edges
     edge_to_bundlecap = bundle_cap(G, agg_edge_dict)
-    print("edge_to_bundlecap", edge_to_bundlecap)
+    #print("edge_to_bundlecap", edge_to_bundlecap)
 
     # select paths for r1, this iteration
     paths = path_meta(G, G_agg, num_clusters, edge_to_bundlecap, 0)
-    print("paths", paths)
+    #print("paths", paths)
     
     r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
+<<<<<<< HEAD
 
     r1_sol_dict = get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod)
     r1_sol_mat = get_solution_as_mat(G_agg, r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist)
@@ -600,3 +680,13 @@ if __name__ == '__main__':
     # print('reconciliation_meta_in_flows',reconciliation_meta_in_flows)
 
     
+=======
+    #print(get_solution_as_mat(r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist))
+    print("solution as dict", get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod))
+
+    # # eventually uncomment this
+    # # format: u_meta --> (k_meta, (s_k, t_k, d_k)) --> (true edge, flow)
+    # r2_solution_dict = extract_r2_solution_dict() # to be implemented (?)
+    # # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (true edge, flow)
+    # reconciliation_solutions_dicts = extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes, orig_to_agg_node)
+>>>>>>> 83ece7f1b03035f50110140750c2e5671f8cd368
