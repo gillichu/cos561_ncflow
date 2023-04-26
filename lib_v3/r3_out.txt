@@ -1,5 +1,5 @@
 
-Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 00:12:40 2023
+Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 00:18:23 2023
 
 Set parameter LogFile to value "r3_out.txt"
 Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
@@ -8,7 +8,7 @@ CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
 Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
 
 Optimize a model with 10 rows, 6 columns and 14 nonzeros
-Model fingerprint: 0x968a97bf
+Model fingerprint: 0x50f2a199
 Coefficient statistics:
   Matrix range     [1e+00, 1e+00]
   Objective range  [1e+00, 1e+00]
@@ -18,7 +18,7 @@ Presolve removed 10 rows and 6 columns
 Presolve time: 0.00s
 Presolve: All rows and columns removed
 Iteration    Objective       Primal Inf.    Dual Inf.      Time
-       0    1.5320761e+01   0.000000e+00   0.000000e+00      0s
+       0    1.7320761e+01   0.000000e+00   0.000000e+00      0s
 
 Solved in 0 iterations and 0.00 seconds (0.00 work units)
-Optimal objective  1.532076147e+01
+Optimal objective  1.732076147e+01

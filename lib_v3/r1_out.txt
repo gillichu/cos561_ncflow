@@ -1,5 +1,5 @@
 
-Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 00:12:40 2023
+Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 00:18:23 2023
 
 Set parameter LogFile to value "r1_out.txt"
 Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
@@ -8,12 +8,12 @@ CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
 Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
 
 Optimize a model with 10 rows, 6 columns and 14 nonzeros
-Model fingerprint: 0x54541c7e
+Model fingerprint: 0x272ba493
 Coefficient statistics:
   Matrix range     [1e+00, 1e+00]
   Objective range  [1e+00, 1e+00]
   Bounds range     [0e+00, 0e+00]
-  RHS range        [3e+00, 6e+00]
+  RHS range        [3e+00, 9e+00]
 Presolve removed 6 rows and 0 columns
 Presolve time: 0.00s
 Presolved: 4 rows, 6 columns, 8 nonzeros
@@ -28,15 +28,15 @@ Barrier statistics:
 
                   Objective                Residual
 Iter       Primal          Dual         Primal    Dual     Compl     Time
-   0   2.82692457e+01  3.68871432e+01  1.87e+00 0.00e+00  3.36e+00     0s
-   1   1.65179353e+01  2.29543587e+01  0.00e+00 8.88e-16  4.02e-01     0s
-   2   1.92422665e+01  1.97263547e+01  0.00e+00 0.00e+00  3.03e-02     0s
-   3   1.93201689e+01  1.93213355e+01  0.00e+00 0.00e+00  7.29e-05     0s
-   4   1.93207609e+01  1.93207620e+01  0.00e+00 4.44e-16  7.29e-08     0s
-   5   1.93207615e+01  1.93207615e+01  0.00e+00 4.44e-16  7.29e-14     0s
+   0   3.41269896e+01  3.92871364e+01  2.47e+00 0.00e+00  3.84e+00     0s
+   1   1.91629581e+01  2.67149602e+01  0.00e+00 4.44e-16  4.72e-01     0s
+   2   2.21905743e+01  2.28299847e+01  0.00e+00 0.00e+00  4.00e-02     0s
+   3   2.22834076e+01  2.22854720e+01  0.00e+00 4.44e-16  1.29e-04     0s
+   4   2.22841793e+01  2.22841814e+01  0.00e+00 0.00e+00  1.29e-07     0s
+   5   2.22841801e+01  2.22841801e+01  0.00e+00 4.44e-16  1.29e-13     0s
 
 Barrier solved model in 5 iterations and 0.00 seconds (0.00 work units)
-Optimal objective 1.93207615e+01
+Optimal objective 2.22841801e+01
 
 Crossover log...
 
@@ -48,7 +48,7 @@ Crossover log...
   Push phase complete: Pinf 0.0000000e+00, Dinf 0.0000000e+00      0s
 
 Iteration    Objective       Primal Inf.    Dual Inf.      Time
-       5    1.9320761e+01   0.000000e+00   0.000000e+00      0s
+       5    2.2284180e+01   0.000000e+00   0.000000e+00      0s
 
 Solved in 5 iterations and 0.00 seconds (0.00 work units)
-Optimal objective  1.932076147e+01
+Optimal objective  2.228418012e+01

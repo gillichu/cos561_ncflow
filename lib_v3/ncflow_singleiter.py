@@ -871,9 +871,8 @@ if __name__ == '__main__':
                 meta_flow_list, 0, {meta_commod_key[-1][0]})
 
             for (u_meta, v_meta), meta_flow_val in meta_flow_list:
-                print('meta_commod_key',meta_commod_key,'meta_flow_val',meta_flow_val, 'r3_meta_flow', r3_meta_flow)
                 meta_commod_to_meta_edge_fraction_of_r3_flow[meta_commod_key][(
-                    u_meta, v_meta)] += meta_flow_val / r3_meta_flow
+                    u_meta, v_meta)] += 0.0 if meta_flow_val < EPS or r3_meta_flow < EPS else meta_flow_val / r3_meta_flow
 
         for meta_node_id, model in enumerate(r2_models):
             if model is None:

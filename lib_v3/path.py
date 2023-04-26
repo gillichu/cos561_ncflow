@@ -238,21 +238,21 @@ def toy_network_4():
     G.add_node(7, pos=(3, 0))
     G.add_node(8, pos=(2, -1))
 
-    add_bi_edge(G, 0, 1, capacity=1)
-    add_bi_edge(G, 0, 2, capacity=2)
-    add_bi_edge(G, 1, 2, capacity=3)
+    add_bi_edge(G, 0, 1, capacity=4)
+    add_bi_edge(G, 0, 2, capacity=5)
+    add_bi_edge(G, 1, 2, capacity=6)
     
-    add_bi_edge(G, 3, 4, capacity=4)  # 4
-    add_bi_edge(G, 3, 5, capacity=5)  # 5
-    add_bi_edge(G, 4, 5, capacity=6)  # ...
+    add_bi_edge(G, 3, 4, capacity=7)  # 4
+    add_bi_edge(G, 3, 5, capacity=8)  # 5
+    add_bi_edge(G, 4, 5, capacity=9)  # ...
 
-    add_bi_edge(G, 6, 7, capacity=7)
-    add_bi_edge(G, 6, 8, capacity=8)
-    add_bi_edge(G, 7, 8, capacity=9)
+    add_bi_edge(G, 6, 7, capacity=10)
+    add_bi_edge(G, 6, 8, capacity=11)
+    add_bi_edge(G, 7, 8, capacity=12)
 
-    add_bi_edge(G, 0, 3, capacity=1)                                                                     
-    add_bi_edge(G, 2, 5, capacity=2)
-    add_bi_edge(G, 4, 7, capacity=3)  # 12
+    add_bi_edge(G, 0, 3, capacity=4)                                                                     
+    add_bi_edge(G, 2, 5, capacity=5)
+    add_bi_edge(G, 4, 7, capacity=6)  # 12
 
     # add_bi_edge(G, 0, 6, capacity=5) 
     return G
