@@ -23,10 +23,12 @@ def solve(G, tm, iter_id, num_clusters):
         ### expects input:
         ### paths_dict[(u_meta, v_meta)] = [([e1, e2, e3, ..., eN], mincap)]
         ### paths_dict contains meta node pairs that may not be directly connected
-        print("path dictionary", paths_dict)
+
+        # print("path dictionary", paths_dict)
 
         r1_outfile = 'r1_out.txt'
-        os.remove(r1_outfile)
+        if os.path.isfile(r1_outfile): 
+            os.remove(r1_outfile)
 
         commodities = []
         commodidx_to_info = dict()
@@ -36,8 +38,8 @@ def solve(G, tm, iter_id, num_clusters):
         # holds meta edges that actually exist between clusters
         meta_edge_to_pathids = defaultdict(list)
         cap_list = nx.get_edge_attributes(G, 'capacity')
-        print("cap list", cap_list)
-        print("agg_commodities_dict.keys", agg_commodities_dict.keys())
+        # print("cap list", cap_list)
+        # print("agg_commodities_dict.keys", agg_commodities_dict.keys())
         
         path_idx = 0
 
@@ -77,7 +79,7 @@ def solve(G, tm, iter_id, num_clusters):
         # add demand constraints
         for _, d_k, path_ids in commodities:
             # sum of all path variables for commodity k (only one) should be <= commodity k's demand (d_k)
-            print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
+            # print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
             m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
 
         # add meta_edge capacity constraints 
@@ -86,12 +88,12 @@ def solve(G, tm, iter_id, num_clusters):
             # get all paths on this meta_edge
             path_indices = meta_edge_to_pathids[meta_edge]
             c_e = edge_to_bundlecap[meta_edge]
-            print("capacity", c_e)
+            # print("capacity", c_e)
             # c_e = paths_dict[meta_edge][1]
 
             # ensure that all paths on a given meta_edge meet the meta_edge constraint
             constr_vars = [path_variables[p] for p in path_indices]
-            print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
+            # print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
             m.addConstr(quicksum(constr_vars) <= c_e)
 
         return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info, path_idx, commodities, meta_edge_to_pathids
@@ -113,7 +115,7 @@ def solve(G, tm, iter_id, num_clusters):
         for var in model.getVars():
             # match var name back to path
             p = int(re.match(r'f\[(\d+)\]', var.varName).group(1))
-            print("var", p)
+            # print("var", p)
             commodity_idx = path_id_to_commod_id[p]
             # from path_idx get edges
             for edge in pathidx_to_edgelist[p]:
@@ -158,7 +160,7 @@ def solve(G, tm, iter_id, num_clusters):
 
         # find intra_commods for this meta_node? <- they do this outside the function in the original code....
         r2_outfile = 'r2_out' + str(current_meta_node) + '.txt'
-        print("am i actually doing anything?")
+        
         meta_commodity_list = list(meta_commodity_dict.keys())
         
         subgraph_nodes = agg_to_orig_nodes[current_meta_node] #np.argwhere(partition_vector == current_meta_node).flatten()
@@ -261,7 +263,7 @@ def solve(G, tm, iter_id, num_clusters):
         edge_to_path_ids = dict(edge_to_path_ids)
         v_hat_in_paths = dict(v_hat_in_paths)
         v_hat_out_paths = dict(v_hat_out_paths)
-        print(path_id_to_multi_commod_ids)
+        # print(path_id_to_multi_commod_ids)
 
 
         m2 = Model('max-flow: R2, metanode {}'.format(current_meta_node))
@@ -294,7 +296,7 @@ def solve(G, tm, iter_id, num_clusters):
 
         # set the demand constraints
         for multi_commod_id, (_, _, demand, _) in enumerate(multi_commodity_list):
-            print(f"Adding demand constraint {mc_id_to_path_id_to_var[multi_commod_id]} <= {demand}")
+            # print(f"Adding demand constraint {mc_id_to_path_id_to_var[multi_commod_id]} <= {demand}")
             m2.addConstr(quicksum(mc_id_to_path_id_to_var[multi_commod_id].values()) <= demand)
 
 
@@ -306,7 +308,7 @@ def solve(G, tm, iter_id, num_clusters):
                     var for p in path_ids
                     for var in path_id_to_commod_id_to_var[p].values()
                 ]
-                print(f"Adding edge capacity {constr_vars} <= {c_e}")
+                # print(f"Adding edge capacity {constr_vars} <= {c_e}")
                 m2.addConstr(quicksum(constr_vars) <= c_e)
 
 
@@ -317,7 +319,7 @@ def solve(G, tm, iter_id, num_clusters):
             if edge[0] == current_meta_node or edge[-1] == current_meta_node
         }
         
-        print(type(r1_sol_mat))
+        
         for k_meta, multi_commod_ids_list in meta_commod_to_multi_commod_ids.items():
             s_k_meta, t_k_meta, _ = meta_commodity_list[k_meta][-1]
      
@@ -332,7 +334,7 @@ def solve(G, tm, iter_id, num_clusters):
                             for p in v_hat_in_paths[v_hat_in]
                             for multi_commod_id in path_id_to_multi_commod_ids[p]
                             if multi_commod_id in multi_commod_ids_list]
-                        print(f"Adding meta-in-flow constraint {constr_vars} <= {meta_in_flow}")
+                        # print(f"Adding meta-in-flow constraint {constr_vars} <= {meta_in_flow}")
                         m2.addConstr(quicksum(constr_vars) <= meta_in_flow)
 
             if t_k_meta != current_meta_node:
@@ -347,7 +349,7 @@ def solve(G, tm, iter_id, num_clusters):
                             for p in v_hat_out_paths[v_hat_out]
                             for multi_commod_id in path_id_to_multi_commod_ids[p]
                             if multi_commod_id in multi_commod_ids_list]
-                        print(f"Adding meta-out-flow constraint {constr_vars} <= {meta_out_flow}")
+                        # print(f"Adding meta-out-flow constraint {constr_vars} <= {meta_out_flow}")
                         m2.addConstr(quicksum(constr_vars) <= meta_out_flow)
         
         return LpSolver(m2, None, r2_outfile), multi_commodity_list, path_id_to_multi_commod_ids, all_paths
@@ -426,7 +428,7 @@ def solve(G, tm, iter_id, num_clusters):
         nodes_in_u_meta, nodes_in_v_meta = set(), set()
 
         u_hat_in, v_hat_out = meta_to_virt_dict[u_meta][0], meta_to_virt_dict[v_meta][1] 
-        print(u_meta, u_hat_in, v_meta, v_hat_out)
+        # print(u_meta, u_hat_in, v_meta, v_hat_out)
 
         all_u_meta_v_meta_inter_edges = [(u,v,G[u][v][CAPACITY]) for u in agg_to_orig_nodes[u_meta] \
                                          for v in G.successors(u) if orig_to_agg_node[v]==v_meta]
@@ -448,17 +450,17 @@ def solve(G, tm, iter_id, num_clusters):
         # only use meta commodity solution from R2 for flows from u_meta to v_meta
         shared_meta_commodities = set(r2_u_meta_sol_dict.keys()).intersection(set(r2_v_meta_sol_dict.keys()))
         
-        for commod in shared_meta_commodities:
-            print('commod',commod)
-            print(v_hat_out, r2_u_meta_sol_dict[commod], sum([v==v_hat_out for ((u,v), _) in r2_u_meta_sol_dict[commod]]) )
-            print(u_hat_in, r2_v_meta_sol_dict[commod], sum([u==u_hat_in for ((u,v), _) in r2_v_meta_sol_dict[commod]]))
-            print()
+        # for commod in shared_meta_commodities:
+        #     print('commod',commod)
+        #     print(v_hat_out, r2_u_meta_sol_dict[commod], sum([v==v_hat_out for ((u,v), _) in r2_u_meta_sol_dict[commod]]) )
+        #     print(u_hat_in, r2_v_meta_sol_dict[commod], sum([u==u_hat_in for ((u,v), _) in r2_v_meta_sol_dict[commod]]))
+        #     print()
 
         shared_meta_commodities = [commod for commod in shared_meta_commodities if sum([v==v_hat_out for ((u,v), _) in r2_u_meta_sol_dict[commod]]) > 0]
         shared_meta_commodities = [commod for commod in shared_meta_commodities if sum([u==u_hat_in for ((u,v), _) in r2_v_meta_sol_dict[commod]]) > 0]
-        print(shared_meta_commodities)
+        # print(shared_meta_commodities)
 
-        print(shared_meta_commodities)
+        # print(shared_meta_commodities)
         m = Model(f"reconciliation [meta_node (out) = {u_meta}][meta_node (in) = {v_meta}]")
 
         num_edges, num_commodities = len(all_u_meta_v_meta_inter_edges), len(shared_meta_commodities)
@@ -466,7 +468,7 @@ def solve(G, tm, iter_id, num_clusters):
 
         # edge capacity constraints
         for edge_idx, (u, v, capacity) in enumerate(all_u_meta_v_meta_inter_edges):
-            print(f"Adding capacity constraint: edge {edge_idx} <= {capacity}")
+            # print(f"Adding capacity constraint: edge {edge_idx} <= {capacity}")
             m.addConstr(commodity_vars.sum(edge_idx, '*') <= capacity, f"capacity [edge_idx_{edge_idx}][u {u}][v {v}]")
 
 
@@ -488,7 +490,7 @@ def solve(G, tm, iter_id, num_clusters):
                 total_u_meta_flows[k_meta] += outflow
 
                 outgoing_inter_edges_to_idx = [interedge_to_idx[(u,v)] for v in G_u_meta_v_meta.successors(u)]
-                print(f"Adding outflow constraint: (sum of commods for edges {outgoing_inter_edges_to_idx}) <= {outflow}")
+                # print(f"Adding outflow constraint: (sum of commods for edges {outgoing_inter_edges_to_idx}) <= {outflow}")
                 m.addConstr(quicksum(commodity_vars[edge, k_local] for edge in outgoing_inter_edges_to_idx) <= outflow, f"outflow [u {u}]][k_meta {k_meta}]")
 
             # sum of inflow to v <= f_{k_local}
@@ -502,7 +504,7 @@ def solve(G, tm, iter_id, num_clusters):
                 total_v_meta_flows[k_meta] += inflow
 
                 incoming_inter_edges_to_idx = [interedge_to_idx[(u,v)] for u in G_u_meta_v_meta.predecessors(v)]
-                print(f"Adding inflow constraint: (sum of commods for edges {incoming_inter_edges_to_idx}) <= {inflow}")
+                # print(f"Adding inflow constraint: (sum of commods for edges {incoming_inter_edges_to_idx}) <= {inflow}")
                 m.addConstr(quicksum(commodity_vars[edge, k_local] for edge in incoming_inter_edges_to_idx) <= inflow, f"inflow [v {v}]][k_meta {k_meta}]")
 
         # objective is to maximize flow
@@ -535,7 +537,7 @@ def solve(G, tm, iter_id, num_clusters):
                 sol_dict_def[(k_meta, (s_k, t_k, d_k))].append((edge, flow))
 
             sol_dict_def = dict(sol_dict_def)
-            print(u_meta, v_meta,len(shared_meta_commodities))
+            # print(u_meta, v_meta,len(shared_meta_commodities))
             reconciliation_solutions_dicts[(u_meta, v_meta)] = {commod: sol_dict_def[commod] if commod in sol_dict_def else [] for commod in shared_meta_commodities}
 
         # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (edge, flow)
@@ -650,7 +652,7 @@ def solve(G, tm, iter_id, num_clusters):
             meta_flow_list = inter_sol_dict[meta_commod_key]
             r3_meta_flow = compute_in_or_out_flow(
                 meta_flow_list, 0, {meta_commod_key[-1][0]})
-            print('meta_commod_key', meta_commod_key, 'r3_meta_flow',r3_meta_flow)
+            # print('meta_commod_key', meta_commod_key, 'r3_meta_flow',r3_meta_flow)
             sum_of_kirchoff_flows = sum(
                 kirchoff_flow_per_commod[k] for k in commod_ids)
 
@@ -711,19 +713,19 @@ def solve(G, tm, iter_id, num_clusters):
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict, commodity_list = construct_subproblems(G, tm, num_clusters=num_clusters)
 
     #print("G clusters dict", [(k, G_clusters_dict[k].nodes()) for k in G_clusters_dict])
-    print("agg_edge_dict", agg_edge_dict)
+    # print("agg_edge_dict", agg_edge_dict)
     
     # bundle capacities on inter_edges
     edge_to_bundlecap = bundle_cap(G, agg_edge_dict)
-    print("edge_to_bundlecap", edge_to_bundlecap)
+    # print("edge_to_bundlecap", edge_to_bundlecap)
 
     # select paths for r1, this iteration
     paths = path_meta(G, G_agg, num_clusters, edge_to_bundlecap, 0)
-    print("paths", paths)
+    # print("paths", paths)
     
     r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info, r1_path_idx, r1_commodities, r1_meta_edge_to_pathids = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
-    print(r1_solver.solve_lp(Method.BARRIER))
-    print(r1_solver._model.objVal)
+    r1_solver.solve_lp(Method.BARRIER)
+    r1_solver._model.objVal
 
     r1_sol_dict = get_solution_as_dict(r1_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod)
     r1_sol_mat = get_solution_as_mat(G_agg, r1_solver._model, r1_path_to_commod, paths, pathidx_to_edgelist)
@@ -766,7 +768,7 @@ def solve(G, tm, iter_id, num_clusters):
         r2_paths.append(all_paths)
 
         model = r2_solver._model
-        print('current_meta_node ',current_meta_node)
+        # print('current_meta_node ',current_meta_node)
         
         curr_r2_sol_dict, r2_srcs_out_flow_lists_dict, r2_targets_in_flow_lists_dict, intra_sol_dict = extract_r2_solution_dict(model, agg_commodities_dict, multi_commodity_list, path_id_to_commod_id, all_paths, virt_to_meta_dict,intra_commods)
         r2_solution_dict[current_meta_node] =  curr_r2_sol_dict
@@ -776,12 +778,12 @@ def solve(G, tm, iter_id, num_clusters):
             r2_srcs_out_flow_lists[commod_ids] = flow_list
         for commod_ids, flow_list in r2_targets_in_flow_lists_dict.items():
             r2_targets_in_flow_lists[commod_ids] = flow_list
-        print(current_meta_node, r2_solution_dict[current_meta_node])
+        # print(current_meta_node, r2_solution_dict[current_meta_node])
 
     # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (true edge, flow)
     reconciliation_solutions_dicts = extract_reconciliation_solution_dict(G, r2_solution_dict, agg_to_orig_nodes, orig_to_agg_node,  all_v_hat_in, all_v_hat_out)
-    print('Reconciliation', reconciliation_solutions_dicts)
-    print('agg_to_orig_nodes',agg_to_orig_nodes)
+    # print('Reconciliation', reconciliation_solutions_dicts)
+    # print('agg_to_orig_nodes',agg_to_orig_nodes)
 
     reconciliation_meta_out_flows = defaultdict(lambda: defaultdict(float))
     reconciliation_meta_in_flows = defaultdict(lambda: defaultdict(float))
@@ -799,11 +801,11 @@ def solve(G, tm, iter_id, num_clusters):
             reconciliation_meta_out_flows[k_meta][u_meta] += total_flow
             reconciliation_meta_in_flows[k_meta][v_meta] += total_flow
             after_recon_flow[k_meta] = total_flow
-        print('(u_meta, v_meta)',(u_meta, v_meta))
-        print('after_recon_flow',after_recon_flow)
+        # print('(u_meta, v_meta)',(u_meta, v_meta))
+        # print('after_recon_flow',after_recon_flow)
 
-    print('reconciliation_meta_out_flows',reconciliation_meta_out_flows)
-    print('reconciliation_meta_in_flows',reconciliation_meta_in_flows)
+    # print('reconciliation_meta_out_flows',reconciliation_meta_out_flows)
+    # print('reconciliation_meta_in_flows',reconciliation_meta_in_flows)
 
     adjusted_meta_commodity_list = []
     r2_src_out_flows = divide_into_multi_commod_flows(r2_srcs_out_flow_lists, 0, orig_to_agg_node)
@@ -834,7 +836,7 @@ def solve(G, tm, iter_id, num_clusters):
 
             adjusted_meta_commodity_list.append((k_meta, (s_k_meta, t_k_meta, adjusted_meta_demand)))
 
-    print('adjusted_meta_commodity_list', adjusted_meta_commodity_list)
+    # print('adjusted_meta_commodity_list', adjusted_meta_commodity_list)
     meta_commodity_list = list(agg_commodities_dict.keys())
 
     r3_solver= r3_lp(r1_path_idx, r1_commodities, r1_meta_edge_to_pathids,reconciliation_solutions_dicts)
@@ -937,12 +939,12 @@ def solve(G, tm, iter_id, num_clusters):
                                     continue
                                 if v in virt_to_meta_dict:
                                     v_meta = virt_to_meta_dict[v]
-                                    v = inter_edges[(meta_node_id, v_meta)][1]
+                                    v = inter_edges[(meta_node_id, v_meta)][0][1]
                                 sol_dict[commod_key].append(((u, v), flow_per_path_per_commod))
 
         return sol_dict
-    print('\n\n\n')
-    print(sol_dict())
+    # print('\n\n\n')
+    # print(sol_dict())
     return sol_dict()
 
 

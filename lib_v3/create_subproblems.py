@@ -53,7 +53,7 @@ def vis_graph(G, node_label='label', edge_label='capacity', orig_to_agg_node = [
         for i in range(0,len(G.nodes)):
             cluster_id = orig_to_agg_node[i]
             colors[i] = allcolors[cluster_id % len(allcolors)]
-    nx.draw(G, pos, node_size=1000, node_color=colors)
+    nx.draw(G, pos, node_size=999, node_color=colors)
     node_labels = get_node_attrs_or_default(G, node_label, str)
     nx.draw_networkx_labels(G, pos, labels=node_labels)
 

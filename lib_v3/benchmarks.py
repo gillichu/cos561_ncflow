@@ -7,33 +7,10 @@ from create_subproblems import *
 from path import * 
 from collections import defaultdict
 
-### RUNNING PF4
-tm_type = "uniform"
 
-# read in graph file
-### SMALLEST (74 nodes, should be extremely quick to run.)
-#graphname = "uninett2010"
-#graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Uninett2010.graphml"
-#tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Uninett2010.graphml_uniform_1089401497_4.0_0.46_traffic-matrix.pkl"
-
-### MEDIUM TOPOLOGY 
-graphname = "cogentco"
-graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Cogentco.graphml"
-tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Cogentco.graphml_uniform_1022466024_16.0_0.06_traffic-matrix.pkl"
-
-### LARGEST TOPOLOGY (754 nodes, takes a long time to run.)
-#graphname = "kdl"
-#graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Kdl.graphml"
-#tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Kdl.graphml_uniform_1192452225_1.0_0.005_traffic-matrix.pkl"
-
-dropped_nodes = []
-tm = read_traffic_matrix(tmfile)
-G = read_graphml(graphfile)
-num_nodes = len(G.nodes())
-
-# vis_graph(G)
 
 def preprocess_tz_files(graphname, G, tm, num_nodes): 
+    dropped_nodes = []
     print("start with", len(G.nodes), "nodes", "tm of shape", tm.shape)
 
 # fill in the position 
@@ -58,7 +35,7 @@ def preprocess_tz_files(graphname, G, tm, num_nodes):
 # rename the capacity from 'cap' to 'capacity' to fit expected
     for u, v, a in G.edges(data=True):
         # print("edge", u, v, a)
-        G[u][v]['capacity'] = 1000 #G[u][v]['cap']
+        G[u][v]['capacity'] = 100 #G[u][v]['cap']
         #G[u][v]['capacity'] = G[u][v]['cap']
 
 
@@ -97,6 +74,33 @@ def preprocess_tz_files(graphname, G, tm, num_nodes):
 
 ### BEGINNING OF PROCESS TOPOLOGY ZOO GRAPHS
 if __name__ == '__main__':
+    ### RUNNING PF4
+    tm_type = "uniform"
+
+    # read in graph file
+    ### SMALLEST (74 nodes, should be extremely quick to run.)
+    #graphname = "uninett2010"
+    #graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Uninett2010.graphml"
+    #tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Uninett2010.graphml_uniform_1089401497_4.0_0.46_traffic-matrix.pkl"
+
+
+    ### MEDIUM TOPOLOGY 
+
+    graphname = "cogentco"
+    graphfile = "../topologies/Cogentco.graphml"
+    tmfile = "../traffic-matrices/uniform/Cogentco.graphml_uniform_1022466024_16.0_0.06_traffic-matrix.pkl"
+
+    ### LARGEST TOPOLOGY (754 nodes, takes a long time to run.)
+    #graphname = "kdl"
+    #graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Kdl.graphml"
+    #tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Kdl.graphml_uniform_1192452225_1.0_0.005_traffic-matrix.pkl"
+
+
+    tm = read_traffic_matrix(tmfile)
+    G = read_graphml(graphfile)
+    num_nodes = len(G.nodes())
+
+# vis_graph(G)
     G, tm, num_nodes = preprocess_tz_files(graphname, G, tm, num_nodes)
 
     print("Bundling capacity...")
