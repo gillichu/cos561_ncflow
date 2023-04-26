@@ -226,6 +226,39 @@ def toy_network_3():
     add_bi_edge(G, 4, 7, capacity=3)  # 12
     return G
 
+def toy_network_4():
+    G = nx.DiGraph()
+    G.add_node(0, pos=(-3, 1))
+    G.add_node(1, pos=(-2, 0))
+    G.add_node(2, pos=(-3, -1))
+    G.add_node(3, pos=(-1, 1))
+    G.add_node(4, pos=(1, 0))
+    G.add_node(5, pos=(-1, -1))
+    G.add_node(6, pos=(2, 1))
+    G.add_node(7, pos=(3, 0))
+    G.add_node(8, pos=(2, -1))
+
+    add_bi_edge(G, 0, 1, capacity=1)
+    add_bi_edge(G, 0, 2, capacity=2)
+    add_bi_edge(G, 1, 2, capacity=3)
+    
+    add_bi_edge(G, 3, 4, capacity=4)  # 4
+    add_bi_edge(G, 3, 5, capacity=5)  # 5
+    add_bi_edge(G, 4, 5, capacity=6)  # ...
+
+    add_bi_edge(G, 6, 7, capacity=7)
+    add_bi_edge(G, 6, 8, capacity=8)
+    add_bi_edge(G, 7, 8, capacity=9)
+
+    add_bi_edge(G, 0, 3, capacity=1)                                                                     
+    add_bi_edge(G, 2, 5, capacity=2)
+    add_bi_edge(G, 4, 7, capacity=3)  # 12
+
+    # add_bi_edge(G, 0, 6, capacity=5) 
+    return G
+
+
+
 
 if __name__ == '__main__':
     G = toy_network_3()

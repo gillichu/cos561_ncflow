@@ -705,7 +705,9 @@ def waterfall_memoized():
 
 if __name__ == '__main__':
     # G = toy_network_1()
-    G = toy_network_2()
+    # G = toy_network_2()
+    G = toy_network_4()
+
     tm = generate_uniform_tm(G)
     num_clusters = int(np.sqrt(len(G.nodes)))
     iter_id = 0

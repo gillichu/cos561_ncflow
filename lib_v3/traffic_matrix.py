@@ -3,7 +3,7 @@ from collections import defaultdict
 import networkx as nx
 
 
-def generate_uniform_tm(G, max_demand=10, seed=0):
+def generate_uniform_tm(G, max_demand=1, seed=0):
     '''
     Generate uniform traffic matrix for network G
     '''
