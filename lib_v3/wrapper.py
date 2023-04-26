@@ -125,8 +125,9 @@ if __name__ == '__main__':
         time_results.append(time_taken)
 
     with open(outfile, 'w+') as f:
-        f.write(str(num_clusters))
-        f.write(str(demand_results))
-        f.write(str(time_results))
+        f.write(str(num_clusters) + "\n" )
+        f.write(str(demand_results) + "\n" )
+        f.write(str(time_results) + "\n")
+
 
 
