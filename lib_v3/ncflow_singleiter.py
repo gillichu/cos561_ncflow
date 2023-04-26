@@ -649,6 +649,7 @@ def compute_flow_per_inter_commod(meta_commodity_dict, inter_sol_dict, kirchoff_
         meta_flow_list = inter_sol_dict[meta_commod_key]
         r3_meta_flow = compute_in_or_out_flow(
             meta_flow_list, 0, {meta_commod_key[-1][0]})
+        print('meta_commod_key', meta_commod_key, 'r3_meta_flow',r3_meta_flow)
         sum_of_kirchoff_flows = sum(
             kirchoff_flow_per_commod[k] for k in commod_ids)
 
@@ -849,7 +850,6 @@ if __name__ == '__main__':
         flow_val = compute_in_or_out_flow(flow_list, 0, {s_k_meta})
         r3_obj_val += flow_val
         inter_sol_dict[meta_commodity_list[k_meta]] = flow_list
-
     
 
     def sol_dict():
@@ -859,7 +859,7 @@ if __name__ == '__main__':
 
         sol_dict = intra_sol_dict
 
-        flow_per_inter_commod_after_r3 = compute_flow_per_inter_commod(agg_commodities_dict,intra_sol_dict, kirchoff_flow_per_commod,waterfall_memoized)
+        flow_per_inter_commod_after_r3 = compute_flow_per_inter_commod(agg_commodities_dict,inter_sol_dict, kirchoff_flow_per_commod,waterfall_memoized)
 
         meta_commod_to_meta_edge_fraction_of_r3_flow = defaultdict(
             lambda: defaultdict(float))
@@ -869,6 +869,7 @@ if __name__ == '__main__':
                 meta_flow_list, 0, {meta_commod_key[-1][0]})
 
             for (u_meta, v_meta), meta_flow_val in meta_flow_list:
+                print('meta_commod_key',meta_commod_key,'meta_flow_val',meta_flow_val, 'r3_meta_flow', r3_meta_flow)
                 meta_commod_to_meta_edge_fraction_of_r3_flow[meta_commod_key][(
                     u_meta, v_meta)] += meta_flow_val / r3_meta_flow
 
