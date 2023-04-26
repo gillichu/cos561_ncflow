@@ -1,7 +1,6 @@
 from itertools import permutations 
 import pickle
 import networkx as nx
-from create_subproblems import partition_network
 from ncflow_singleiter import * 
 from preprocess import *
 from create_subproblems import * 
