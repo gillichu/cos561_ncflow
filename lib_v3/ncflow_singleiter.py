@@ -93,7 +93,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap):
         print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
         m.addConstr(quicksum(constr_vars) <= c_e)
 
-    return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info
+    return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info, path_idx, commodities, meta_edge_to_pathids
 
 def get_solution_as_mat(G_meta,model, path_id_to_commod_id, paths, pathidx_to_edgelist):
     num_edges = len(paths.keys())
@@ -596,8 +596,50 @@ def divide_into_multi_commod_flows(multi_commod_flow_lists, src_or_target_idx, o
         multi_commod_flows_per_k_meta[(u_meta, v_meta)][commod_ids] = compute_in_or_out_flow(flow_list, src_or_target_idx, {src_or_target})
     return dict(multi_commod_flows_per_k_meta)
 
-def r3_lp():
-    pass
+def total_flow1(list):
+    flow = 0
+    for (_,f) in list:
+        flow += f
+    return flow
+
+def r3_lp(path_idx, commodities, meta_edge_to_pathids, reconciliation_sol_dict):
+
+    # Setting up the model
+    r3_outfile = 'r3_out.txt'
+    try: os.remove(r3_outfile)
+    except: pass
+    m = Model('max-flow: R3')
+    m.Params.LogToConsole = 0
+    # print("commodities", commodities)
+    
+    # create a variable for each path
+    path_variables = m.addVars(path_idx, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
+
+    # set objective
+    obj = quicksum(path_variables)
+    m.setObjective(obj, GRB.MAXIMIZE)
+
+    # add demand constraints
+    for _, d_k, path_ids in commodities:
+        # sum of all path variables for commodity k (only one) should be <= commodity k's demand (d_k)
+        # print("Adding commodity constraint:", _, "path ids", path_ids, " <= ", d_k)
+        m.addConstr(quicksum(path_variables[p] for p in path_ids) <= d_k)
+
+    # add meta_edge capacity constraints 
+    for meta_edge in meta_edge_to_pathids.keys():
+
+        # get all paths on this meta_edge
+        path_indices = meta_edge_to_pathids[meta_edge]
+        recon_flow = 0
+        recon_all = reconciliation_sol_dict[meta_edge]
+        for commod in recon_all:
+            recon_flow += total_flow1(recon_all[commod])
+        # ensure that all paths on a given meta_edge meet the meta_edge reconciliation flow
+        constr_vars = [path_variables[p] for p in path_indices]
+        # print("Adding capacity constraints: physical meta edges", meta_edge, "uses path indices", path_indices, "<=", c_e)
+        m.addConstr(quicksum(constr_vars) <= recon_flow)
+
+    return LpSolver(m, None, r3_outfile)
 
 def compute_flow_per_inter_commod(meta_commodity_dict, inter_sol_dict, kirchoff_flow_per_commod, waterfall_memoized):
     # Calculate flow per commod that traverses between two or more meta-nodes
@@ -626,6 +668,39 @@ def compute_flow_per_inter_commod(meta_commodity_dict, inter_sol_dict, kirchoff_
                     flow_per_inter_commod[k] = 0.0
 
     return flow_per_inter_commod
+def waterfall_memoized():
+    # Memoize results in demand_satisfied
+    demand_satisfied = {}
+
+    def fn(flow_val, k, commods):
+        if k in demand_satisfied:
+            return demand_satisfied[k]
+
+        EPS = 1e-6
+        demand_remaining = {commod[0]: commod[-1][-1] for commod in commods}
+        flow_remaining = flow_val
+        sorted_commods = [commod[0] for commod in sorted(commods, key=lambda x: x[-1][-1])]
+        while len(demand_remaining) > 0:
+            k_smallest = sorted_commods[0]
+            flow_to_assign = min(flow_remaining / len(commods), demand_remaining[k_smallest])
+            for commod_id, (_, _, orig_demand) in commods:
+                if commod_id not in demand_remaining:
+                    continue
+                demand_remaining[commod_id] -= flow_to_assign
+                if abs(demand_remaining[commod_id] - 0.0) < EPS:
+                    demand_satisfied[commod_id] = orig_demand
+                    del demand_remaining[commod_id]
+                    sorted_commods.remove(commod_id)
+                flow_remaining -= flow_to_assign
+            if abs(flow_remaining - 0.0) < EPS:
+                break
+        for commod_id, (_, _, orig_demand) in commods:
+            if commod_id in demand_remaining:
+                demand_satisfied[commod_id] = orig_demand - demand_remaining[commod_id]
+
+        return demand_satisfied[k]
+
+    return fn
 
 if __name__ == '__main__':
     # G = toy_network_1()
@@ -647,7 +722,7 @@ if __name__ == '__main__':
     paths = path_meta(G, G_agg, num_clusters, edge_to_bundlecap, 0)
     print("paths", paths)
     
-    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
+    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info, r1_path_idx, r1_commodities, r1_meta_edge_to_pathids = r1_lp(G, paths, agg_commodities_dict, edge_to_bundlecap)
     print(r1_solver.solve_lp(Method.BARRIER))
     print(r1_solver._model.objVal)
 
@@ -763,6 +838,10 @@ if __name__ == '__main__':
     print('adjusted_meta_commodity_list', adjusted_meta_commodity_list)
     meta_commodity_list = list(agg_commodities_dict.keys())
 
+    r3_solver= r3_lp(r1_path_idx, r1_commodities, r1_meta_edge_to_pathids,reconciliation_solutions_dicts)
+    r3_solver.solve_lp(Method.BARRIER)
+    r3_sol_dict = get_solution_as_dict(r3_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod)
+    
     r3_obj_val = 0.0
     inter_sol_dict = {}
     for meta_commod_key, flow_list in r3_sol_dict.items():
@@ -771,6 +850,8 @@ if __name__ == '__main__':
         r3_obj_val += flow_val
         inter_sol_dict[meta_commodity_list[k_meta]] = flow_list
 
+    
+
     def sol_dict():
         intra_sol_dict = {commod_key: flow_list for sol_dict in intra_sols_dicts for commod_key, flow_list in sol_dict.items()}
         commod_id_to_meta_commod_id = {commod_key: meta_commod_key[0] for meta_commod_key, c_l in agg_commodities_dict.items() for commod_key, (_, _, _) in c_l}
@@ -778,7 +859,7 @@ if __name__ == '__main__':
 
         sol_dict = intra_sol_dict
 
-        flow_per_inter_commod_after_r3 = compute_flow_per_inter_commod(agg_commodities_dict,intra_sol_dict, kirchoff_flow_per_commod)
+        flow_per_inter_commod_after_r3 = compute_flow_per_inter_commod(agg_commodities_dict,intra_sol_dict, kirchoff_flow_per_commod,waterfall_memoized)
 
         meta_commod_to_meta_edge_fraction_of_r3_flow = defaultdict(
             lambda: defaultdict(float))
@@ -862,5 +943,7 @@ if __name__ == '__main__':
                                 sol_dict[commod_key].append(((u, v), flow_per_path_per_commod))
 
         return sol_dict
+    print('\n\n\n')
+    print(sol_dict())
 
     
