@@ -4,7 +4,7 @@ from itertools import permutations
 import pickle
 import networkx as nx
 #from ncflow_singleiter import * 
-from ncflow_singleiter_lib import * 
+from ncflow_singleiter import * 
 from preprocess import *
 from create_subproblems import * 
 from path import * 
@@ -172,8 +172,8 @@ if __name__ == '__main__':
 
     write_output.append(f'{dist_type}, {objval}, {runtime}\n')
 
-with open(outfile, 'w+') as w:
-    for s in write_output:
-        w.write(s)
+    with open(outfile, 'w+') as w:
+        for s in write_output:
+            w.write(s)
 
 

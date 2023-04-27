@@ -101,14 +101,15 @@ if __name__ == '__main__':
     #tmfile = "../traffic-matrices/uniform/Cogentco.graphml_uniform_1022466024_16.0_0.06_traffic-matrix.pkl"
 
     #graphname = "Uninett2010"
-    #graphname = "Kdl"
-    graphname = "Cogentco"
+    graphname = "Kdl"
+    #graphname = "Cogentco"
     graphfile = f'/Users/gc3045/cos561/cos561_ncflow/topologies/{graphname}.graphml'
     #tmfile = "../../ncflow/traffic-matrices/uniform/Uninett2010.graphml_uniform_1089401497_4.0_0.46_traffic-matrix.pkl"
 
     ### GILLIAN WILL DO BIMODAL
+    
 
-    dist_types = ["bimodal", "gravity", "uniform"]
+    dist_types = ["uniform"] #, "gravity", "uniform"]
     for dist_type in dist_types:
         print(f'dist_type: {dist_type}')
         tmfile = glob.glob(f'/Users/gc3045/cos561/ncflow/traffic-matrices/{dist_type}/{graphname}*')[0]
