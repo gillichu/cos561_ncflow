@@ -605,7 +605,36 @@ def solve(G, tm, iter_id, num_clusters):
             flow += f
         return flow
 
-    def r3_lp(path_idx, commodities, meta_edge_to_pathids, reconciliation_sol_dict):
+    def r3_lp(paths_dict, agg_commodities, reconciliation_sol_dict):
+
+        commodities = []
+        commodidx_to_info = dict()
+        r3_path_to_commodities = dict()
+        r3_commodity_to_pathids = defaultdict(list)
+        pathidx_to_edgelist = defaultdict(list)
+        meta_edge_to_pathids = defaultdict(list)
+        
+        path_idx = 0
+
+        for key in agg_commodities:
+            commodity_idx, pathinfo = key
+            s_k, t_k, d_k = pathinfo
+            commodidx_to_info[commodity_idx] = key
+
+            # get single path between each pair of meta nodes
+            # should only have 1, since selected inter-cluster edges
+            path_nodelist = paths_dict[(s_k, t_k)][0] 
+            # original node edges
+            for edge in nodelist_to_edgelist(path_nodelist):
+                meta_edge_to_pathids[edge].append(path_idx)
+                pathidx_to_edgelist[path_idx].append(edge)
+                
+            # get the path to commodity (for r3)
+            r3_path_to_commodities[path_idx] = commodity_idx
+            r3_commodity_to_pathids[commodity_idx].append(path_idx)
+            
+            commodities.append((commodity_idx, d_k, [path_idx]))
+            path_idx += 1
 
         # Setting up the model
         r3_outfile = 'r3_out.txt'
@@ -705,7 +734,19 @@ def solve(G, tm, iter_id, num_clusters):
             return demand_satisfied[k]
 
         return fn
-
+    
+    # For kirchoff's adjusted commodities
+    def sum_demand(commodities):
+        demand_dict = defaultdict(dict)
+        for (i,(s_t,t_k,d_k)) in commodities:
+            if demand_dict.get(i) == None:
+                demand_dict[i] = [s_t,t_k,d_k]
+            else: 
+                demand_dict[i][2] += d_k
+        new_commodities = []
+        for i in demand_dict.keys():
+            new_commodities.append((i,(demand_dict[i][0],demand_dict[i][1],demand_dict[i][2])))
+        return new_commodities
 
 #def solve(G, tm, iter_id, num_clusters): 
 
@@ -836,10 +877,15 @@ def solve(G, tm, iter_id, num_clusters):
 
             adjusted_meta_commodity_list.append((k_meta, (s_k_meta, t_k_meta, adjusted_meta_demand)))
 
-    # print('adjusted_meta_commodity_list', adjusted_meta_commodity_list)
+    # print('\n\nadjusted_meta_commodity_list', adjusted_meta_commodity_list,'\n')
     meta_commodity_list = list(agg_commodities_dict.keys())
 
-    r3_solver= r3_lp(r1_path_idx, r1_commodities, r1_meta_edge_to_pathids,reconciliation_solutions_dicts)
+    new_commodities = sum_demand(adjusted_meta_commodity_list)
+    # print('new_commodities: ',new_commodities,'\n')
+    # print('agg_commodities_dict: ',agg_commodities_dict,'\n')
+    # print('agg_commodities_dict,keys: ',agg_commodities_dict.keys(),'\n')
+
+    r3_solver= r3_lp(paths, new_commodities,reconciliation_solutions_dicts)
     r3_solver.solve_lp(Method.BARRIER)
     r3_sol_dict = get_solution_as_dict(r3_solver._model, pathidx_to_edgelist, commodidx_to_info, r1_path_to_commod)
     
@@ -958,6 +1004,3 @@ if __name__ == '__main__':
     num_clusters = int(np.sqrt(len(G.nodes)))
     iter_id = 0
     solve(G, tm, iter_id, num_clusters)
-
-
-
