@@ -1,5 +1,5 @@
 
-Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 00:18:23 2023
+Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 18:45:35 2023
 
 Set parameter LogFile to value "reconciliation_out.txt"
 Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
@@ -7,14 +7,14 @@ Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
 CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
 Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
 
-Optimize a model with 10 rows, 4 columns and 12 nonzeros
-Model fingerprint: 0x1024f44d
+Optimize a model with 6 rows, 2 columns and 6 nonzeros
+Model fingerprint: 0x77519785
 Coefficient statistics:
   Matrix range     [1e+00, 1e+00]
   Objective range  [1e+00, 1e+00]
   Bounds range     [0e+00, 0e+00]
-  RHS range        [3e+00, 5e+00]
-Presolve removed 10 rows and 4 columns
+  RHS range        [4e+00, 5e+00]
+Presolve removed 6 rows and 2 columns
 Presolve time: 0.00s
 Presolve: All rows and columns removed
 Iteration    Objective       Primal Inf.    Dual Inf.      Time

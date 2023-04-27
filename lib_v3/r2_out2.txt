@@ -682,3 +682,27 @@ Iteration    Objective       Primal Inf.    Dual Inf.      Time
 
 Solved in 0 iterations and 0.00 seconds (0.00 work units)
 Optimal objective  2.531255559e+01
+
+Gurobi 10.0.1 (mac64[x86]) logging started Wed Apr 26 18:45:35 2023
+
+Set parameter LogFile to value "r2_out2.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 32 rows, 36 columns and 94 nonzeros
+Model fingerprint: 0x349d6ac1
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-01, 9e+00]
+Presolve removed 32 rows and 36 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    2.0349137e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  2.034913683e+01
