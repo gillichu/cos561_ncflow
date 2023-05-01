@@ -1,0 +1,54 @@
+
+Gurobi 10.0.1 (mac64[x86]) logging started Sun Apr 30 20:18:01 2023
+
+Set parameter LogFile to value "r2_out9.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 5273 rows, 1227 columns and 3417 nonzeros
+Model fingerprint: 0xb75f02a6
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [2e-01, 4e+01]
+Presolve removed 5269 rows and 1220 columns
+Presolve time: 0.00s
+Presolved: 4 rows, 7 columns, 10 nonzeros
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 3.000e+00
+ Factor NZ  : 1.000e+01
+ Factor Ops : 3.000e+01 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   2.06723961e+02  1.99142270e+02  7.40e+00 3.83e-01  4.37e+00     0s
+   1   1.84703664e+02  1.92766902e+02  0.00e+00 1.14e-01  5.26e-01     0s
+   2   1.89049669e+02  1.89813167e+02  1.33e-14 3.72e-03  4.67e-02     0s
+   3   1.89322637e+02  1.89347710e+02  1.60e-14 4.44e-16  1.47e-03     0s
+   4   1.89326243e+02  1.89326271e+02  8.88e-16 0.00e+00  1.68e-06     0s
+   5   1.89326250e+02  1.89326250e+02  8.88e-16 4.44e-16  1.68e-09     0s
+
+Barrier solved model in 5 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 1.89326250e+02
+
+Crossover log...
+
+       0 DPushes remaining with DInf 0.0000000e+00                 0s
+
+       3 PPushes remaining with PInf 0.0000000e+00                 0s
+       0 PPushes remaining with PInf 0.0000000e+00                 0s
+
+  Push phase complete: Pinf 0.0000000e+00, Dinf 0.0000000e+00      0s
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       6    1.8932625e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 6 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  1.893262500e+02

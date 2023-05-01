@@ -1,0 +1,192 @@
+
+Gurobi 10.0.1 (mac64[x86]) logging started Thu Apr 27 18:07:09 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0xb5eba959
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4551760e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.455176034e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Thu Apr 27 18:51:57 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 02:32:13 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 10:20:58 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.01 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 11:06:13 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 11:52:35 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.01 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 12:45:24 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
+
+Gurobi 10.0.1 (mac64[x86]) logging started Fri Apr 28 15:08:41 2023
+
+Set parameter LogFile to value "r2_out186.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 16132 rows, 6604 columns and 23728 nonzeros
+Model fingerprint: 0x3a841401
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-03, 1e+02]
+Presolve removed 16132 rows and 6604 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4545064e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.01 work units)
+Optimal objective  1.454506362e+02
