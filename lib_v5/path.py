@@ -56,12 +56,11 @@ def select_inter_edge(G, agg_edge_dict, iter_id):
         selected_inter_edge[(u_meta,v_meta)] = (edges[i],cap_list[edges[i]])
     return selected_inter_edge
     
-# Check if input path is a valid path, return the min edge cap, i.e. path bottleneck capacity
+# Check if input path on AGGREGATED graph is a valid path, return the min edge cap, i.e. path bottleneck capacity
 def compute_agg_path_cap(G_agg,path, bundled_cap):
     if nx.is_path(G_agg, path) == False:
         print("not a path in compute_agg_path_cap!")
         return 0
-
     min = 999999
     for (u_cluster,v_cluster) in path_to_edgelist(path):
         cap = bundled_cap[(u_cluster,v_cluster)]
@@ -74,7 +73,6 @@ def path_meta_pair(G, G_agg, u_cluster, v_cluster,bundled_cap, iter_id, k = None
     if len(paths) < 1:
         print("no path found in path_meta_pair!")
         return ([],0)
-    # selected_inter_edge = select_inter_edge(G, agg_edge_dict, iter_id)
     paths = sorted(paths, key = lambda path: compute_agg_path_cap(G_agg,path,bundled_cap), reverse=True)
     path = paths[iter_id % len(paths)]
     return (path,compute_agg_path_cap(G_agg,path,bundled_cap))
@@ -119,6 +117,7 @@ def v_hat_dict(G_agg, meta_to_virt_dict):
         v_hat_outs[u_meta].append(meta_to_virt_dict[v_meta][1])
     return v_hat_ins, v_hat_outs
 
+
 EPS = 1e-5
 
 def extract_sol_as_mat2(model, G, path_id_to_commod_id, all_paths):
@@ -136,13 +135,10 @@ def extract_sol_as_mat2(model, G, path_id_to_commod_id, all_paths):
 
         return sol_mat
 
+# Input: 1. flow_seq -> list of edges, flow allocation on those edges
+#        2. current_meta_node
+# Output: set of in_neighbors, out_neighbors
 def get_in_and_out_neighbors(flow_list, curr_meta_node):
-	# input
-	# flow_seq -> list of edges, flow allocation on those edges
-	# current_meta_node
-
-	# return set of in_neighbors, out_neighbors
-
 	in_neighbors, out_neighbors = set(), set()
 	for (u, v), l in flow_list:
 		if u == curr_meta_node:
@@ -165,9 +161,10 @@ def compute_in_or_out_flow(flow_list, edge_idx, node_set={}):
             flow += l
         elif edge[1 - edge_idx] in node_set:
             flow -= l
-
     return flow
 
+# -------------------------------------------------------------
+# TESTING
 def toy_network_2():
     G = nx.DiGraph()
     G.add_node(0, pos=(-3, 1))
@@ -267,77 +264,3 @@ if __name__ == '__main__':
     num_clusters = int(np.sqrt(len(G.nodes)))
     G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict = construct_subproblems(G, tm, num_clusters=num_clusters)
     vis_graph(G,orig_to_agg_node=orig_to_agg_node)
-    # vis_graph(G_agg)
-
-    # print('agg_to_orig_nodes ', agg_to_orig_nodes, '\n') 
-    # print('orig_to_agg_node ', orig_to_agg_node, '\n') 
-    # print('agg_commodities_dict ', agg_commodities_dict, '\n') 
-    # print('agg_edge_dict ', agg_edge_dict, '\n')
-
-    # selected_inter_edge = select_inter_edge(G, agg_edge_dict, 0)
-    # print('selected_inter_edge ', selected_inter_edge, '\n')
-
-    # bundle_cap = bundle_cap(G, agg_edge_dict)
-
-    # paths = path_meta(G, G_agg, num_clusters, bundle_cap, 0)
-    # print('path_meta ', paths, '\n')
-
-    # r2_paths = path_r2(2,G_clusters_dict)
-    # print('r2_paths for cluster 2: ', r2_paths, '\n')
-
-    # v_hat_ins, v_hat_outs = v_hat_dict(G_agg)
-    # print('v_hat_ins: ', v_hat_ins, '\n')
-    # print('v_hat_outs: ', v_hat_outs, '\n')
-    
-
-
-
-
-# # Find all paths from u_cluster to v_cluster
-# def path_meta_pair(G, agg_edge_dict, agg_to_orig_nodes, u_cluster, v_cluster, k = None):
-#     # First, add direct edges between u and v as length-1 paths
-#     paths = [list(e) for e in agg_edge_dict[(u_cluster, v_cluster)]]
-
-#     # Create G' by contracting nodes in u_cluster into a single node, and same with v_cluster
-#     newG = G
-#     u_nodes = agg_to_orig_nodes[u_cluster]
-#     for i in range(1,len(u_nodes)):
-#         newG = nx.contracted_nodes(newG,u_nodes[0],u_nodes[i],self_loops=False)
-    
-#     v_nodes = agg_to_orig_nodes[v_cluster]
-#     for i in range(1,len(v_nodes)):
-#         newG = nx.contracted_nodes(newG,v_nodes[0],v_nodes[i],self_loops=False)
-
-#     # Find paths connecting u and v with length >= 2, these paths' endpoints are cluster_ids
-#     # instread of real node_ids, so we will replace them with node_ids 
-#     # **how to select which edge? a lot of details needed
-#     long_paths = [path for path in path_simple(newG, u_nodes[0],v_nodes[0],k) if len(path) > 2]
-#     for path in long_paths:
-#         s = list(set(u_nodes).intersection(list(G.predecessors(path[1]))))[0]
-#         t = list(set(v_nodes).intersection(list(G.successors(path[-2]))))[0]
-#         path[0] = s
-#         path[-1] = t
-    
-#     return paths+long_paths
-
-# # Find paths for every pair of clusters
-# # OUTPUT: paths[(u_cluster,v_cluster)] = list of all paths from u_cluster to v_cluster
-# def path_meta(G, num_clusters, agg_edge_dict, agg_to_orig_nodes, k = None):
-#     meta_pairs = list(combinations(range(0,num_clusters), 2))
-#     paths = defaultdict(dict)
-#     for (u_cluster, v_cluster) in meta_pairs:
-#         paths[(u_cluster,v_cluster)] = path_meta_pair(G, agg_edge_dict, agg_to_orig_nodes, u_cluster, v_cluster, k)
-#         paths[(v_cluster,u_cluster)] = path_meta_pair(G, agg_edge_dict, agg_to_orig_nodes, v_cluster, u_cluster, k)
-
-#     return paths
-
-
-
-# # sort agg_edge_dict: agg_edge_dict[(u_meta,v_meta)] is a list of edges between u_meta -> v_meta by decreasing edge cap
-# def agg_edge_dict_sorted(G, agg_edge_dict):
-#     cap_list = nx.get_edge_attributes(G,'capacity')
-#     agg_edge_dict_sorted = defaultdict(dict)
-#     for (u_meta,v_meta) in agg_edge_dict.keys():
-#         edges = agg_edge_dict[(u_meta,v_meta)]
-#         agg_edge_dict_sorted[(u_meta,v_meta)] = sorted(edges, key = lambda e: cap_list[e],reverse=True)
-#     return agg_edge_dict_sorted
