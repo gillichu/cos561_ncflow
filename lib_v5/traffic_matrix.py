@@ -51,7 +51,7 @@ def generate_gravity_tm(G, total_demand, seed=0, sample=False):
     tm *= total_demand
     return tm
 
-def generate_poisson_tm(G, lam, const_factor, decay=1.0, seed=0):
+def generate_poisson_tm(G, lam, const_factor=-1, decay=1.0, seed=0):
     '''
     Generate poisson traffic matrix for network G
     '''
@@ -68,7 +68,7 @@ def generate_poisson_tm(G, lam, const_factor, decay=1.0, seed=0):
                         dtype=np.float32)
     np.fill_diagonal(tm, 0.0)
 
-    tm *= const_factor
+    if const_factor> 0: tm *= const_factor
     return tm
 
 def generate_gaussian_tm(G, mean, stddev, decay=1.0, seed=0):
@@ -169,12 +169,10 @@ def toy_network_3():
 
 if __name__ == '__main__':
     G = toy_network_3()
-    tm = generate_uniform_tm(G)
+    tm = generate_poisson_tm(G,0.5)
     print(tm)
     print('\n\n')
-    # tm = generate_gravity_tm(G,20)
-    # print(tm)
-    tms = generate_sequence_of_tms(tm,3,1,0.5)
+    tms = generate_sequence_of_tms(tm,3,0,0.25)
     for i in range(0,len(tms)):
         print('\n',i,'\n')
         print(tms[i])

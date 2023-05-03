@@ -38,7 +38,7 @@ if __name__ == '__main__':
     perturb_mean = 0
     perturb_std = 0.25
     G = read_graphml('/Users/cloverzsq/Desktop/cos561_ncflow/topologies/Uninett2010.graphml')
-    tm = generate_uniform_tm(G)
+    tm =  generate_poisson_tm(G,0.5)
     num_cluster = int(np.sqrt(len(G.nodes)))
     demands, times = time_series(G,tm,num_tms,perturb_mean,perturb_std,num_cluster,max_num_iter,"test1",True)
     print(demands)
