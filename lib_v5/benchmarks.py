@@ -75,34 +75,44 @@ def preprocess_tz_files(graphname, G, tm, num_nodes):
 
 
 ### BEGINNING OF PROCESS TOPOLOGY ZOO GRAPHS
-if __name__ == '__main__':
+def pf4_run(G,tm):
     ### RUNNING PF4
-    #tm_type = "uniform"
+    start_time = time.time()
+    num_nodes = len(G.nodes())
+    G, tm, num_nodes = preprocess_tz_files("", G, tm, num_nodes)
 
-    # read in graph file
-    ### SMALLEST (74 nodes, should be extremely quick to run.)
-    #graphname = "uninett2010"
-    #graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Uninett2010.graphml"
-    #tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Uninett2010.graphml_uniform_1089401497_4.0_0.46_traffic-matrix.pkl"
+    edge_to_bundlecap = dict()
+    for u, v, a in G.edges(data=True):
+        edge_to_bundlecap[(u, v)] = G[u][v]['capacity']
+
+    all_paths = dict()
+    for u, v in permutations(list(G.nodes), 2): 
+        paths = path_simple(G, u, v, k=4)
+        all_paths[(u, v)] = paths
+
+    ### Need to build agg_commodities_dict
+    commodities_dict = defaultdict(list)
+    commodity_list = generate_commodity_list(tm)
+    for k, (s_k, t_k, d_k) in commodity_list:
+        commodities_dict[(k, (s_k, t_k, d_k))].append(d_k)
+
+    ### Need to build partition_vector
+    partition_vector = []
+    for nidx, node in enumerate(G.nodes()):
+        partition_vector.append(nidx)
+
+    # r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info = r1_lp(G, all_paths, commodities_dict, edge_to_bundlecap, pf4_outfile)
+    r1_solver, r1_path_to_commod, pathidx_to_edgelist, commodidx_to_info, _, _, _ = r1_lp(G, all_paths, commodities_dict, edge_to_bundlecap)
+
+    r1_solver.solve_lp(Method.BARRIER)
+    objval = r1_solver._model.objVal
+
+    runtime = time.time() - start_time
+
+    return objval, runtime
 
 
-    ### MEDIUM TOPOLOGY 
-
-    #graphname = "cogentco"
-    #graphfile = "../topologies/Cogentco.graphml"
-        
-    ### LARGEST TOPOLOGY (754 nodes, takes a long time to run.)
-    #graphname = "kdl"
-    #graphfile = "/Users/gc3045/cos561/cos561_ncflow/topologies/Kdl.graphml"
-    #tmfile = "/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Kdl.graphml_uniform_1192452225_1.0_0.005_traffic-matrix.pkl"
-
-    # vis_graph(G)
-
-    #dist_types = ["bimodal", "gravity", "uniform"]
-    #dist_types = ["bimodal", "gravity", "poisson-high-inter", "poisson-high-intra", "uniform"]
-    
-    # graphname = "Cogentco" #Uninett2010"
-    # graphfile = f"../topologies/{graphname}.graphml"
+if __name__ == '__main__':
     graphname = "Uninett2010"
     #graphname = "Cogentco"
     graphfile = f'/Users/simran/cos561/proj/cos561_ncflow/topologies/{graphname}.graphml'
@@ -114,17 +124,15 @@ if __name__ == '__main__':
     dist_type = "uniform"
     
     outfile = f'pf4_out/{graphname}_{dist_type}_result_lib.txt'
-
-    start_time = time.time()
-
     dname = f'pf4_out/{dist_type}'
     if not os.path.exists(dname):
         os.mkdir(dname)
+
+    start_time = time.time()
     #tmfile = glob.glob(f'/Users/gc3045/cos561/ncflow/traffic-matrices/{dist_type}/{graphname}*')[0]
     # tmfile = '/Users/gc3045/cos561/ncflow/traffic-matrices/uniform/Cogentco.graphml_uniform_1022466024_16.0_0.06_traffic-matrix.pkl'
     #tmfile = glob.glob(f'/Users/gc3045/cos561/ncflow/traffic-matrices/{dist_type}/{graphname}*')[0]
     tmfile = glob.glob(f'/Users/simran/cos561/proj/other/traffic-matrices/{dist_type}/{graphname}*')[0]
-
 
     pkl_out = f'{dname}/{graphname}_{dist_type}_pathsformulation4.pkl'
     solndict_out = f'{dname}/{graphname}_{dist_type}_solndict.pkl'
@@ -180,5 +188,3 @@ if __name__ == '__main__':
     with open(outfile, 'w+') as w:
         for s in write_output:
             w.write(s)
-
-
