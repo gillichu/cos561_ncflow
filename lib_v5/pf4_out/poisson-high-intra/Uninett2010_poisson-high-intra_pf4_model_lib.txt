@@ -1,0 +1,24 @@
+
+Gurobi 10.0.1 (mac64[x86]) logging started Wed May  3 20:08:02 2023
+
+Set parameter LogFile to value "pf4_out/poisson-high-intra/Uninett2010_poisson-high-intra_pf4_model_lib.txt"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+CPU model: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 5604 rows, 5402 columns and 30652 nonzeros
+Model fingerprint: 0x160f2ae4
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [2e-08, 3e+03]
+Presolve removed 5604 rows and 5402 columns
+Presolve time: 0.01s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    2.0200000e+04   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.01 seconds (0.01 work units)
+Optimal objective  2.020000000e+04

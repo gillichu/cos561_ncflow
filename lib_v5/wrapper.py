@@ -20,6 +20,8 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
     total_demand_fulfilled = 0 
     start_time = time.time()
 
+    demands_satisfied_per_iter = []
+
     for iteridx in range(max_num_iters):
 
         print("ITERATION:", iteridx)
@@ -80,6 +82,9 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
         # --------------------------------------------------------------------------------
         curr_total_capacity = 0.0
         curr_total_capacity = sum(cap for _, _, cap in current_G.edges.data('capacity'))
+
+        curr_demand_fulfilled = total_demand_fulfilled if len(demands_satisfied_per_iter)==0 else total_demand_fulfilled - demands_satisfied_per_iter[-1]
+        demands_satisfied_per_iter.append(curr_demand_fulfilled)
         
         print('found total demand = ', total_demand_fulfilled)
 
@@ -93,7 +98,7 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
     total_original_demand = sum(sum(tm))
     print('total original demand', total_original_demand)
 
-    return total_demand_fulfilled, time.time()-start_time
+    return total_demand_fulfilled, time.time()-start_time, demands_satisfied_per_iter
 
 
 if __name__ == '__main__':
@@ -143,6 +148,7 @@ if __name__ == '__main__':
 
         demand_results = []
         time_results = []
+        demands_satisfied_per_iter_results = []
 
         for num_cluster in num_clusters:
 
@@ -154,12 +160,14 @@ if __name__ == '__main__':
             G, tm, num_nodes = preprocess_tz_files(graphname, G, tm, num_nodes)
 
             print('num_cluster', num_cluster)
-            total_demand, time_taken = solver_wrapper(G, tm, max_num_iters, int(num_cluster))
+            total_demand, time_taken, demands_satisfied_per_iter = solver_wrapper(G, tm, max_num_iters, int(num_cluster))
             demand_results.append(total_demand)
             time_results.append(time_taken)
+            demands_satisfied_per_iter_results.append(demands_satisfied_per_iter)
 
         with open(outfile, 'w+') as f:
             f.write(str(num_clusters) + "\n")
             f.write(str(demand_results) + "\n")
             f.write(str(time_results) + "\n")
+            f.write(str(demands_satisfied_per_iter_results) + "\n")
 

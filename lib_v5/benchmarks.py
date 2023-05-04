@@ -113,7 +113,7 @@ def pf4_run(G,tm):
 
 
 if __name__ == '__main__':
-    graphname = "Uninett2010"
+    graphname = "Kdl" #"Cogentco"
     #graphname = "Cogentco"
     graphfile = f'/Users/simran/cos561/proj/cos561_ncflow/topologies/{graphname}.graphml'
 
@@ -121,9 +121,9 @@ if __name__ == '__main__':
     write_output = []
 
     #for dist_type in dist_types:
-    dist_type = "uniform"
+    dist_type = "poisson-high-intra" #"uniform"
     
-    outfile = f'pf4_out/{graphname}_{dist_type}_result_lib.txt'
+    outfile = f'/Users/simran/cos561/proj/cos561_ncflow/lib_v5/pf4_out/{graphname}_{dist_type}_result_lib.txt'
     dname = f'pf4_out/{dist_type}'
     if not os.path.exists(dname):
         os.mkdir(dname)
