@@ -82,6 +82,7 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap, r1_outfile = '
         path_idx += 1
     
     m = Model('max-flow: R1')
+    m.Params.OutputFlag = 0
     # print("commodities", commodities)
     
     # create a variable for each path
@@ -276,6 +277,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_par
 
 
         m2 = Model('max-flow: R2, metanode {}'.format(current_meta_node))
+        m2.Params.OutputFlag = 0
 
         # turn path id and multicommod id -> variable id
         path_id_to_commod_id_to_var = defaultdict(dict)
@@ -471,6 +473,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_par
 
         # print(shared_meta_commodities)
         m = Model(f"reconciliation [meta_node (out) = {u_meta}][meta_node (in) = {v_meta}]")
+        m.Params.OutputFlag = 0
 
         num_edges, num_commodities = len(all_u_meta_v_meta_inter_edges), len(shared_meta_commodities)
         commodity_vars = m.addVars(num_edges, num_commodities, vtype=GRB.CONTINUOUS, lb=0.0, name='f')
@@ -566,6 +569,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_par
 
         m = Model('Kirchoff\'s Law, meta-nodes {} (out) and {} (in)'.format(
             u_meta, v_meta))
+        m.Params.OutputFlag = 0
 
         commod_vars = m.addVars(len(all_commod_ids), vtype=GRB.CONTINUOUS, lb=0.0, name='f')
 
@@ -627,7 +631,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_par
             os.remove(r3_outfile)
 
         m = Model('max-flow: R3')
-        m.Params.LogToConsole = 0
+        m.Params.OutputFlag = 0
         # print("commodities", commodities)
         
         # create a variable for each path
