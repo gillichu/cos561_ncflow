@@ -114,8 +114,8 @@ def partition_network(G, num_clusters=3):
     _, partition_vector = pymetis.part_graph(num_clusters, adjncy=adjncy, xadj=xadj, eweights=eweights, recursive=True, options=pymetis.Options(rtype=0))
     return np.array(partition_vector)
 
-
-def construct_subproblems(G, tm, num_clusters=3, orig_G=None):
+# old_partition_flag = True, orig_to_agg_node != none means we dont need to partition again
+def construct_subproblems(G, tm, num_clusters=3, orig_G=None, old_partition_flag = False,orig_to_agg_node = None):
     '''
     Input: 
       - some graph G
@@ -129,10 +129,11 @@ def construct_subproblems(G, tm, num_clusters=3, orig_G=None):
        - agg_commodities_dict: maps 
        - clusters_commodities_dict: maps cluster to its intra-cluster commodity list
     '''
-    if orig_G==None:
-        orig_to_agg_node = partition_network(G, num_clusters=num_clusters)
-    else:
-        orig_to_agg_node = partition_network(orig_G, num_clusters=num_clusters)
+    if old_partition_flag == False:
+        if orig_G==None:
+            orig_to_agg_node = partition_network(G, num_clusters=num_clusters)
+        else:
+            orig_to_agg_node = partition_network(orig_G, num_clusters=num_clusters)
 
     G_agg = nx.DiGraph() 
     agg_edge_dict = defaultdict(list)
@@ -199,10 +200,10 @@ def construct_subproblems(G, tm, num_clusters=3, orig_G=None):
     agg_commodities_dict = {(k, (s_k_cluster_id, t_k_cluster_id, sum(d_k for _, (_, _, d_k) in commodities))): commodities for k, ((s_k_cluster_id, t_k_cluster_id), commodities) in enumerate(agg_commodities_dict.items())}
     
     # Create a hash function/dictionary for cluster ids
-    hash_for_clusterid = defaultdict(dict)
-    for i in range(0,num_clusters): hash_for_clusterid[i] = i + len(G.nodes)
+    # hash_for_clusterid = defaultdict(dict)
+    # for i in range(0,num_clusters): hash_for_clusterid[i] = i + len(G.nodes)
 
-    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict, commodity_list
+    return G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict, clusters_commodities_dict, meta_to_virt_dict, virt_to_meta_dict, commodity_list
 
 
 ### EXAMPLE 

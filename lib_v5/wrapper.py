@@ -13,6 +13,7 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
     current_G = G
     current_tm = tm
     num_nodes = len(G.nodes())
+    old_partition = None
     #num_clusters = int(np.sqrt(num_nodes))
     # num_clusters = 60
 
@@ -36,7 +37,12 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
         # --------------------------------------------------------------------------------
         # 1. now run the different LPs
         # --------------------------------------------------------------------------------
-        sdict = solve(current_G, current_tm, iteridx, num_clusters,orig_G=orig_G)
+        if iteridx == 0: 
+            sdict,old_partition = solve(current_G, current_tm, iteridx, num_clusters,orig_G,False, old_partition)
+        else: 
+            old_partition_copy =old_partition
+            sdict,old_partition = solve(current_G, current_tm, iteridx, num_clusters,orig_G,True, old_partition)
+            assert old_partition.sort()==old_partition_copy.sort()
 
         # sdict[k] = kth commodity? -> path with each allocation of flow on each edge
         # sdict[(commodity_k, (src, sink, demand_k))] = [(u1, u2, path_flow), (u3, u4, path_flow), ...] 

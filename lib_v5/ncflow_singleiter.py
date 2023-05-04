@@ -113,7 +113,8 @@ def r1_lp(G, paths_dict, agg_commodities_dict, edge_to_bundlecap, r1_outfile = '
 
     return LpSolver(m, None, r1_outfile), r1_path_to_commodities, pathidx_to_edgelist, commodidx_to_info, path_idx, commodities, meta_edge_to_pathids
 
-def solve(G, tm, iter_id, num_clusters,orig_G=None): 
+# old_partition if don't need to partition again
+def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_partition = None): 
 
 
     def get_solution_as_mat(G_meta,model, path_id_to_commod_id, paths, pathidx_to_edgelist):
@@ -721,7 +722,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None):
         return fn
 
 
-    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, hash_for_clusterid, meta_to_virt_dict, virt_to_meta_dict, commodity_list = construct_subproblems(G, tm, num_clusters=num_clusters,orig_G=orig_G)
+    G_agg, agg_edge_dict, agg_to_orig_nodes, orig_to_agg_node, G_clusters_dict, agg_commodities_dict,clusters_commodities_dict, meta_to_virt_dict, virt_to_meta_dict, commodity_list = construct_subproblems(G, tm, num_clusters,orig_G,partition_flag,old_partition)
     
     # bundle capacities on inter_edges
     edge_to_bundlecap = bundle_cap(G, agg_edge_dict)
@@ -946,9 +947,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None):
                                 sol_dict[commod_key].append(((u, v), flow_per_path_per_commod))
 
         return sol_dict
-    # print('\n\n\n')
-    # print(sol_dict())
-    return sol_dict()
+    return sol_dict(),orig_to_agg_node
 
 
     
