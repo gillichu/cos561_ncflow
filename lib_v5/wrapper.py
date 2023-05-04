@@ -6,6 +6,9 @@ from preprocess import *
 from benchmarks import preprocess_tz_files
 import time 
 
+def convert_list(lst):
+    return [tpl[0] for tpl in lst]
+
 def solver_wrapper(G, tm, max_num_iters, num_clusters):
     current_total_demand = 0
     current_commodity_demands = defaultdict(dict)
@@ -19,6 +22,14 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
 
     total_demand_fulfilled = 0 
     start_time = time.time()
+
+    fib_entries = 0
+    for node in range(0, len(tm)):
+        fib_entries += np.count_nonzero(tm[node])
+
+    unique_paths_per_node = defaultdict(dict)
+    for node in range(0, len(G.nodes())):
+        unique_paths_per_node[node] = set()
 
     demands_satisfied_per_iter = []
 
@@ -58,6 +69,15 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
         # update the capacities of G based on what flow was pushed in each edge
         for commod in sdict.keys():
             path_alloc = sdict[commod]
+
+            # path_alloc = [((u,v), flow_alloc), ((u,v), flow_alloc)]
+            pathlet = convert_list(path_alloc)
+
+            unique_flow = [item for sublist in pathlet for item in sublist]
+            for node in set(unique_flow):
+                unique_paths_per_node[node].add(tuple(unique_flow))
+
+
             if len(path_alloc) > 0: 
                 demand_fulfilled = min(path_alloc[-1][-1], min([current_G[u1][u2]['capacity'] for ((u1, u2), path_flow) in path_alloc]))
                 for edge in path_alloc:
@@ -98,7 +118,12 @@ def solver_wrapper(G, tm, max_num_iters, num_clusters):
     total_original_demand = sum(sum(tm))
     print('total original demand', total_original_demand)
 
-    return total_demand_fulfilled, time.time()-start_time, demands_satisfied_per_iter
+
+    for node in unique_paths_per_node.keys():
+        fib_entries += len(list(unique_paths_per_node[node]))
+    print('total fib entries', fib_entries)
+
+    return total_demand_fulfilled, time.time()-start_time, demands_satisfied_per_iter, fib_entries
 
 
 if __name__ == '__main__':
@@ -113,9 +138,9 @@ if __name__ == '__main__':
     #tmfile = "../traffic-matrices/uniform/Cogentco.graphml_uniform_1022466024_16.0_0.06_traffic-matrix.pkl"
 
     #graphname = "Uninett2010"
-    graphname = "Uninett2010"
-    #graphname = "Cogentco"
-    graphfile = f'/Users/simran/cos561/proj/cos561_ncflow/topologies/{graphname}.graphml'
+    # graphname = "Uninett2010"
+    graphname = "Cogentco"
+    graphfile = f'../topologies/{graphname}.graphml'
     #tmfile = "../../ncflow/traffic-matrices/uniform/Uninett2010.graphml_uniform_1089401497_4.0_0.46_traffic-matrix.pkl"
 
     ### GILLIAN WILL DO BIMODAL
@@ -124,7 +149,7 @@ if __name__ == '__main__':
     dist_types = ["uniform"] #, "gravity", "uniform"]
     for dist_type in dist_types:
         print(f'dist_type: {dist_type}')
-        tmfile = glob.glob(f'/Users/simran/cos561/proj/other/traffic-matrices/{dist_type}/{graphname}*')[0]
+        tmfile = glob.glob(f'../traffic-matrices/{dist_type}/{graphname}*')[0]
 
         print(f'tmfile: {tmfile}')
 
@@ -139,7 +164,7 @@ if __name__ == '__main__':
         G, tm, num_nodes = preprocess_tz_files(graphname, G, tm, num_nodes)
 
         num_clusters_unit = num_nodes / (4.0*2)
-        num_clusters = [int(i * num_clusters_unit) for i in range(1, 6)]
+        num_clusters = [int(i * num_clusters_unit) for i in range(1, 2)]
         print("num_clusters", num_clusters)
 
         #total_demand, time_taken = solver_wrapper(G, tm, max_num_iters, 10)
@@ -160,7 +185,7 @@ if __name__ == '__main__':
             G, tm, num_nodes = preprocess_tz_files(graphname, G, tm, num_nodes)
 
             print('num_cluster', num_cluster)
-            total_demand, time_taken, demands_satisfied_per_iter = solver_wrapper(G, tm, max_num_iters, int(num_cluster))
+            total_demand, time_taken, demands_satisfied_per_iter,fib_entries = solver_wrapper(G, tm, max_num_iters, int(num_cluster))
             demand_results.append(total_demand)
             time_results.append(time_taken)
             demands_satisfied_per_iter_results.append(demands_satisfied_per_iter)
@@ -170,4 +195,5 @@ if __name__ == '__main__':
             f.write(str(demand_results) + "\n")
             f.write(str(time_results) + "\n")
             f.write(str(demands_satisfied_per_iter_results) + "\n")
+            f.write(str(fib_entries) + "\n")
 
