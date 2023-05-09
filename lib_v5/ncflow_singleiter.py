@@ -557,6 +557,7 @@ def solve(G, tm, iter_id, num_clusters,orig_G=None,partition_flag=False, old_par
         # format: (u_meta, v_meta) --> (k_meta, (s_k, t_k, d_k)) --> (edge, flow)
         return reconciliation_solutions_dicts
 
+    # heavily inspired by the original NCFlow code, since they did not provide LP details for this LP in the paper at all. 
     def kirchoffs_lp(meta_commod_key, commodity_list, r2_src_out_flows, r2_target_in_flows):
         kirchoff_outfile = 'kirchoff_out.txt'
         if os.path.isfile(kirchoff_outfile): 
